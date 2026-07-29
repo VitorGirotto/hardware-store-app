@@ -1,0 +1,26 @@
+{
+  "name": "hardware-store-app",
+  "version": "1.0.0",
+  "description": "Desktop App for a Hardware Store",
+  "homepage": "https://github.com/VitorGirotto/hardware-store-app#readme",
+  "bugs": {
+    "url": "https://github.com/VitorGirotto/hardware-store-app/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/VitorGirotto/hardware-store-app.git"
+  },
+  "license": "ISC",
+  "author": "Vitor Girotto",
+  "type": "ES6",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "eslint": "^10.8.0"
+  },
+  "devDependencies": {
+    "vite": "^8.1.5"
+  }
+}
