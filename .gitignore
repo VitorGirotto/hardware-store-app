@@ -1,5 +1,9 @@
 # custom ignores
 dist
+out
+release
+data
+.vite
 package-lock.json
 yarn.lock
 
