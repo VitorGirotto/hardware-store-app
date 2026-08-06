@@ -15,15 +15,18 @@
   "type": "module",
   "main": "out/main/main.js",
   "scripts": {
-    "dev": "electron-vite dev",
-    "start": "electron-vite preview",
+    "dev": "HARDWARE_STORE_DB_ENV=development HARDWARE_STORE_DB_PATH=database/development/hardware-store.db electron-vite dev",
+    "start": "HARDWARE_STORE_DB_ENV=production HARDWARE_STORE_DB_PATH=database/production/hardware-store.db electron-vite preview",
     "build": "npm run typecheck && electron-vite build",
     "dist": "npm run build && electron-builder",
-    "test": "vitest run",
+    "test": "HARDWARE_STORE_DB_ENV=test HARDWARE_STORE_DB_PATH=database/test/hardware-store.db vitest run",
     "typecheck": "tsc --noEmit",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio",
+    "db:generate": "HARDWARE_STORE_DB_ENV=development HARDWARE_STORE_DB_PATH=database/development/hardware-store.db drizzle-kit generate",
+    "db:migrate": "npm run db:migrate:dev",
+    "db:migrate:dev": "HARDWARE_STORE_DB_ENV=development HARDWARE_STORE_DB_PATH=database/development/hardware-store.db drizzle-kit migrate",
+    "db:migrate:test": "HARDWARE_STORE_DB_ENV=test HARDWARE_STORE_DB_PATH=database/test/hardware-store.db drizzle-kit migrate",
+    "db:migrate:prod": "HARDWARE_STORE_DB_ENV=production HARDWARE_STORE_DB_PATH=database/production/hardware-store.db drizzle-kit migrate",
+    "db:studio": "HARDWARE_STORE_DB_ENV=development HARDWARE_STORE_DB_PATH=database/development/hardware-store.db drizzle-kit studio",
     "postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
@@ -58,6 +61,7 @@
     },
     "files": [
       "out/**/*",
+      "drizzle/**/*",
       "package.json"
     ],
     "asarUnpack": [

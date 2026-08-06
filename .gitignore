@@ -3,6 +3,8 @@ dist
 out
 release
 data
+database
+explanation.md
 .vite
 package-lock.json
 yarn.lock
