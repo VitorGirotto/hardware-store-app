@@ -1,15 +1,19 @@
 import { relations, sql } from 'drizzle-orm'
 import { integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import { DEFAULT_PRODUCT_UNIT, PRODUCT_UNITS } from '../../shared/constants/product.constants'
 
 export const products = sqliteTable('products', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   name: text('name').notNull(),
-  sku: text('sku').notNull().unique(),
-  description: text('description'),
-  priceInCents: integer('price_in_cents').notNull(),
+  internalCode: text('internal_code').notNull().unique(),
+  barcode: text('barcode').unique(),
+  ncm: text('ncm'),
+  category: text('category'),
+  unitOfMeasure: text('unit_of_measure', { enum: PRODUCT_UNITS }).notNull().default(DEFAULT_PRODUCT_UNIT),
+  costPriceInCents: integer('cost_price_in_cents').notNull().default(0),
+  salePriceInCents: integer('sale_price_in_cents').notNull(),
   stockQuantity: real('stock_quantity').notNull().default(0),
   minimumStockQuantity: real('minimum_stock_quantity').notNull().default(0),
-  unit: text('unit').notNull().default('unit'),
   isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
   createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
   updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`)

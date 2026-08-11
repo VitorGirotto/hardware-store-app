@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'node:path'
 import { initializeDatabase, getDatabasePath } from './db'
+import { registerProductIpc } from './ipc/product.ipc'
 
 let mainWindow: BrowserWindow | null = null
 
@@ -34,6 +35,7 @@ app.whenReady().then(() => {
   initializeDatabase()
 
   ipcMain.handle('app:get-database-path', () => getDatabasePath())
+  registerProductIpc()
 
   createWindow()
 
