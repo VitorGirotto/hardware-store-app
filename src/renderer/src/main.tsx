@@ -1,5 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+import { ProductsPage } from './pages/ProductsPage'
 import './styles.css'
 
 const pages = ['Dashboard', 'Produtos', 'Vendas', 'Estoque', 'Caixa', 'Relatórios', 'Configurações'] as const
@@ -101,7 +102,11 @@ const App = (): React.JSX.Element => {
 
       <div className="flex min-h-screen min-w-0 flex-1 flex-col">
         <Header activePage={activePage} />
-        <PlaceholderPage page={activePage} />
+        {activePage === 'Produtos' ? (
+          <ProductsPage />
+        ) : (
+          <PlaceholderPage page={activePage} />
+        )}
       </div>
     </div>
   )
