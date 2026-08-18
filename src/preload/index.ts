@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron'
+import electron from 'electron'
 import { PRODUCT_IPC_CHANNELS } from '../shared/constants/product.constants'
 import type {
   Product,
@@ -9,6 +9,8 @@ import type {
   ProductServiceResponse,
   ProductUpdateInput
 } from '../shared/types/product.types'
+
+const { contextBridge, ipcRenderer } = electron
 
 const api = {
   getDatabasePath: (): Promise<string> => ipcRenderer.invoke('app:get-database-path'),

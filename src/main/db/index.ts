@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3'
 import { drizzle } from 'drizzle-orm/better-sqlite3'
 import { migrate } from 'drizzle-orm/better-sqlite3/migrator'
-import { app } from 'electron'
+import electron from 'electron'
 import { mkdirSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import {
@@ -10,6 +10,8 @@ import {
   type DatabaseConfig
 } from './config'
 import * as schema from './schema'
+
+const { app } = electron
 
 let sqlite: Database.Database | null = null
 let databaseConfig: DatabaseConfig | null = null

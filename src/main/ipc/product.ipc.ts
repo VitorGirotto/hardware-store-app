@@ -1,6 +1,8 @@
-import { ipcMain } from 'electron'
+import electron from 'electron'
 import { PRODUCT_IPC_CHANNELS } from '../../shared/constants/product.constants'
 import * as productService from '../services/product.service'
+
+const { ipcMain } = electron
 
 export const registerProductIpc = (): void => {
   ipcMain.handle(PRODUCT_IPC_CHANNELS.create, (_event, input) =>

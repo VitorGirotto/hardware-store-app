@@ -15,6 +15,12 @@ import type {
 } from '../../shared/types/product.types'
 
 vi.mock('electron', () => ({
+  default: {
+    app: {
+      isPackaged: false,
+      getPath: () => '/tmp'
+    }
+  },
   app: {
     isPackaged: false,
     getPath: () => '/tmp'

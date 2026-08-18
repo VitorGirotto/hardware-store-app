@@ -10,14 +10,30 @@ type Notice = {
   text: string
 }
 
+type Toast = Notice
+
 export const ProductsPage = (): React.JSX.Element => {
   const [products, setProducts] = React.useState<Product[]>([])
   const [query, setQuery] = React.useState('')
   const [includeInactive, setIncludeInactive] = React.useState(false)
   const [isLoading, setIsLoading] = React.useState(true)
   const [notice, setNotice] = React.useState<Notice | null>(null)
+  const [toast, setToast] = React.useState<Toast | null>(null)
   const [isFormOpen, setIsFormOpen] = React.useState(false)
   const [editingProduct, setEditingProduct] = React.useState<Product | null>(null)
+  const toastTimeoutRef = React.useRef<number | null>(null)
+
+  const showToast = React.useCallback((nextToast: Toast): void => {
+    if (toastTimeoutRef.current) {
+      window.clearTimeout(toastTimeoutRef.current)
+    }
+
+    setToast(nextToast)
+    toastTimeoutRef.current = window.setTimeout(() => {
+      setToast(null)
+      toastTimeoutRef.current = null
+    }, 3200)
+  }, [])
 
   const loadProducts = React.useCallback(async (): Promise<void> => {
     setIsLoading(true)
@@ -37,14 +53,35 @@ export const ProductsPage = (): React.JSX.Element => {
         type: 'error',
         text: result.error
       })
+      showToast({
+        type: 'error',
+        text: 'Erro ao carregar produtos'
+      })
+    } catch (error) {
+      setNotice({
+        type: 'error',
+        text: error instanceof Error ? error.message : 'Erro inesperado ao carregar produtos.'
+      })
+      showToast({
+        type: 'error',
+        text: 'Erro ao carregar produtos'
+      })
     } finally {
       setIsLoading(false)
     }
-  }, [includeInactive, query])
+  }, [includeInactive, query, showToast])
 
   React.useEffect(() => {
     void loadProducts()
   }, [loadProducts])
+
+  React.useEffect(() => {
+    return () => {
+      if (toastTimeoutRef.current) {
+        window.clearTimeout(toastTimeoutRef.current)
+      }
+    }
+  }, [])
 
   const openNewProductForm = (): void => {
     setEditingProduct(null)
@@ -59,9 +96,16 @@ export const ProductsPage = (): React.JSX.Element => {
   }
 
   const handleSaved = (product: Product): void => {
+    const isEditing = Boolean(editingProduct)
+    const successMessage = isEditing ? 'Produto atualizado' : 'Produto cadastrado'
+
     setNotice({
       type: 'success',
-      text: `Produto ${product.name} salvo.`
+      text: `${successMessage}: ${product.name}.`
+    })
+    showToast({
+      type: 'success',
+      text: successMessage
     })
     setEditingProduct(null)
     setIsFormOpen(false)
@@ -69,21 +113,40 @@ export const ProductsPage = (): React.JSX.Element => {
   }
 
   const handleInactivate = async (product: Product): Promise<void> => {
-    const result = await productApi.inactivate(product.id)
+    try {
+      const result = await productApi.inactivate(product.id)
 
-    if (result.success) {
+      if (result.success) {
+        setNotice({
+          type: 'success',
+          text: `Produto ${result.data.name} inativado.`
+        })
+        showToast({
+          type: 'success',
+          text: 'Produto inativado'
+        })
+        void loadProducts()
+        return
+      }
+
       setNotice({
-        type: 'success',
-        text: `Produto ${result.data.name} inativado.`
+        type: 'error',
+        text: result.error
       })
-      void loadProducts()
-      return
+      showToast({
+        type: 'error',
+        text: 'Erro ao inativar'
+      })
+    } catch (error) {
+      setNotice({
+        type: 'error',
+        text: error instanceof Error ? error.message : 'Erro inesperado ao inativar.'
+      })
+      showToast({
+        type: 'error',
+        text: 'Erro ao inativar'
+      })
     }
-
-    setNotice({
-      type: 'error',
-      text: result.error
-    })
   }
 
   const activeProducts = products.filter((product) => product.isActive).length
@@ -153,11 +216,31 @@ export const ProductsPage = (): React.JSX.Element => {
                 setEditingProduct(null)
                 setIsFormOpen(false)
               }}
+              onError={(message) =>
+                showToast({
+                  type: 'error',
+                  text: message
+                })
+              }
               onSaved={handleSaved}
             />
           </aside>
         ) : null}
       </div>
+
+      {toast ? (
+        <div
+          role="status"
+          className={[
+            'fixed bottom-6 left-1/2 z-50 w-[min(92vw,360px)] -translate-x-1/2 border px-5 py-3 text-center text-sm font-semibold shadow-2xl',
+            toast.type === 'success'
+              ? 'border-emerald-400 bg-emerald-500 text-slate-950'
+              : 'border-red-400 bg-red-500 text-white'
+          ].join(' ')}
+        >
+          {toast.text}
+        </div>
+      ) : null}
     </main>
   )
 }

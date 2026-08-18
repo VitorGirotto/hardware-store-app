@@ -6,6 +6,7 @@ import { productApi } from './product.api'
 type ProductFormProps = {
   product: Product | null
   onCancel: () => void
+  onError: (message: string) => void
   onSaved: (product: Product) => void
 }
 
@@ -36,7 +37,7 @@ const parseDecimalInput = (value: string): number | null => {
   const normalized = value.trim().replace(',', '.')
 
   if (!normalized) {
-    return null
+    return 0
   }
 
   const parsed = Number(normalized)
@@ -55,8 +56,8 @@ const createInitialState = (product: Product | null): ProductFormState => ({
   ncm: product?.ncm ?? '',
   category: product?.category ?? '',
   unitOfMeasure: product?.unitOfMeasure ?? 'Un',
-  costPrice: product ? centsToInput(product.costPriceInCents) : '',
-  salePrice: product ? centsToInput(product.salePriceInCents) : '',
+  costPrice: product ? centsToInput(product.costPriceInCents) : '0.00',
+  salePrice: product ? centsToInput(product.salePriceInCents) : '0.00',
   stockQuantity: product ? numberToInput(product.stockQuantity) : '0',
   minimumStockQuantity: product ? numberToInput(product.minimumStockQuantity) : '0',
   isActive: product?.isActive ?? true
@@ -65,6 +66,7 @@ const createInitialState = (product: Product | null): ProductFormState => ({
 export const ProductForm = ({
   product,
   onCancel,
+  onError,
   onSaved
 }: ProductFormProps): React.JSX.Element => {
   const [form, setForm] = React.useState<ProductFormState>(() =>
@@ -101,6 +103,7 @@ export const ProductForm = ({
       minimumStockQuantity === null
     ) {
       setError('Preencha valores numericos validos.')
+      onError(product ? 'Erro ao atualizar' : 'Erro ao cadastrar')
       return null
     }
 
@@ -142,6 +145,11 @@ export const ProductForm = ({
       }
 
       setError([result.error, ...(result.issues ?? [])].join(' '))
+      onError(product ? 'Erro ao atualizar' : 'Erro ao cadastrar')
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Falha inesperada.'
+      setError(message)
+      onError(product ? 'Erro ao atualizar' : 'Erro ao cadastrar')
     } finally {
       setIsSaving(false)
     }

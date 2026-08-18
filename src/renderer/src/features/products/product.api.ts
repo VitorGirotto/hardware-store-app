@@ -8,28 +8,36 @@ import type {
   ProductUpdateInput
 } from '../../../../shared/types/product.types'
 
+const getProductsApi = (): Window['hardwareStore']['products'] => {
+  if (!window.hardwareStore?.products) {
+    throw new Error('API de produtos indisponivel.')
+  }
+
+  return window.hardwareStore.products
+}
+
 export const productApi = {
   create: (
     input: ProductCreateInput
   ): Promise<ProductServiceResponse<Product>> =>
-    window.hardwareStore.products.create(input),
+    getProductsApi().create(input),
   list: (
     filters?: ProductListFilters
   ): Promise<ProductServiceResponse<Product[]>> =>
-    window.hardwareStore.products.list(filters),
+    getProductsApi().list(filters),
   getById: (id: number): Promise<ProductServiceResponse<Product>> =>
-    window.hardwareStore.products.getById(id),
+    getProductsApi().getById(id),
   searchByName: (name: string): Promise<ProductServiceResponse<Product[]>> =>
-    window.hardwareStore.products.searchByName(name),
+    getProductsApi().searchByName(name),
   update: (
     id: number,
     input: ProductUpdateInput
   ): Promise<ProductServiceResponse<Product>> =>
-    window.hardwareStore.products.update(id, input),
+    getProductsApi().update(id, input),
   inactivate: (id: number): Promise<ProductServiceResponse<Product>> =>
-    window.hardwareStore.products.inactivate(id),
+    getProductsApi().inactivate(id),
   checkDuplicateCodes: (
     input: ProductDuplicateCodeInput
   ): Promise<ProductServiceResponse<ProductDuplicateCodeResult>> =>
-    window.hardwareStore.products.checkDuplicateCodes(input)
+    getProductsApi().checkDuplicateCodes(input)
 }

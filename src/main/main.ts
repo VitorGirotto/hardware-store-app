@@ -1,9 +1,12 @@
-import { app, BrowserWindow, ipcMain } from 'electron'
+import electron from 'electron'
+import type { BrowserWindow as ElectronBrowserWindow } from 'electron'
 import { join } from 'node:path'
 import { initializeDatabase, getDatabasePath } from './db'
 import { registerProductIpc } from './ipc/product.ipc'
 
-let mainWindow: BrowserWindow | null = null
+const { app, BrowserWindow, ipcMain } = electron
+
+let mainWindow: ElectronBrowserWindow | null = null
 
 const createWindow = (): void => {
   mainWindow = new BrowserWindow({
@@ -13,7 +16,7 @@ const createWindow = (): void => {
     minHeight: 600,
     show: false,
     webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
+      preload: join(__dirname, '../preload/index.mjs'),
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false
