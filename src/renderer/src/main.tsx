@@ -1,9 +1,10 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+import { CustomersPage } from './pages/CustomersPage'
 import { ProductsPage } from './pages/ProductsPage'
 import './styles.css'
 
-const pages = ['Dashboard', 'Produtos', 'Vendas', 'Estoque', 'Caixa', 'Relatórios', 'Configurações'] as const
+const pages = ['Dashboard', 'Produtos', 'Clientes', 'Vendas', 'Estoque', 'Caixa', 'Relatórios', 'Configurações'] as const
 
 type Page = (typeof pages)[number]
 
@@ -104,6 +105,8 @@ const App = (): React.JSX.Element => {
         <Header activePage={activePage} />
         {activePage === 'Produtos' ? (
           <ProductsPage />
+        ) : activePage === 'Clientes' ? (
+          <CustomersPage />
         ) : (
           <PlaceholderPage page={activePage} />
         )}

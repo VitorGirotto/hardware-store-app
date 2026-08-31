@@ -22,10 +22,11 @@ export const products = sqliteTable('products', {
 export const customers = sqliteTable('customers', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   name: text('name').notNull(),
-  document: text('document'),
+  document: text('document').unique(),
   phone: text('phone'),
-  email: text('email'),
   address: text('address'),
+  creditLimitInCents: integer('credit_limit_in_cents').notNull().default(0),
+  isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
   createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
   updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`)
 })

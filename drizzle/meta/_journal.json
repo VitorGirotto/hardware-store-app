@@ -15,6 +15,13 @@
       "when": 1786490710461,
       "tag": "0001_product_registration",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1788213951885,
+      "tag": "0002_lame_mathemanic",
+      "breakpoints": true
     }
   ]
 }
