@@ -1,5 +1,15 @@
 import electron from 'electron'
+import { CUSTOMER_IPC_CHANNELS } from '../shared/constants/customer.constants'
 import { PRODUCT_IPC_CHANNELS } from '../shared/constants/product.constants'
+import type {
+  Customer,
+  CustomerCreateInput,
+  CustomerDuplicateDocumentInput,
+  CustomerDuplicateDocumentResult,
+  CustomerListFilters,
+  CustomerServiceResponse,
+  CustomerUpdateInput
+} from '../shared/types/customer.types'
 import type {
   Product,
   ProductCreateInput,
@@ -14,6 +24,31 @@ const { contextBridge, ipcRenderer } = electron
 
 const api = {
   getDatabasePath: (): Promise<string> => ipcRenderer.invoke('app:get-database-path'),
+  customers: {
+    create: (
+      input: CustomerCreateInput
+    ): Promise<CustomerServiceResponse<Customer>> =>
+      ipcRenderer.invoke(CUSTOMER_IPC_CHANNELS.create, input),
+    list: (
+      filters?: CustomerListFilters
+    ): Promise<CustomerServiceResponse<Customer[]>> =>
+      ipcRenderer.invoke(CUSTOMER_IPC_CHANNELS.list, filters),
+    getById: (id: number): Promise<CustomerServiceResponse<Customer>> =>
+      ipcRenderer.invoke(CUSTOMER_IPC_CHANNELS.getById, id),
+    searchByName: (name: string): Promise<CustomerServiceResponse<Customer[]>> =>
+      ipcRenderer.invoke(CUSTOMER_IPC_CHANNELS.searchByName, name),
+    update: (
+      id: number,
+      input: CustomerUpdateInput
+    ): Promise<CustomerServiceResponse<Customer>> =>
+      ipcRenderer.invoke(CUSTOMER_IPC_CHANNELS.update, id, input),
+    inactivate: (id: number): Promise<CustomerServiceResponse<Customer>> =>
+      ipcRenderer.invoke(CUSTOMER_IPC_CHANNELS.inactivate, id),
+    checkDuplicateDocument: (
+      input: CustomerDuplicateDocumentInput
+    ): Promise<CustomerServiceResponse<CustomerDuplicateDocumentResult>> =>
+      ipcRenderer.invoke(CUSTOMER_IPC_CHANNELS.checkDuplicateDocument, input)
+  },
   products: {
     create: (
       input: ProductCreateInput
