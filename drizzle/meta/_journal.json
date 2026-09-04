@@ -22,6 +22,13 @@
       "when": 1788213951885,
       "tag": "0002_lame_mathemanic",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1788473457756,
+      "tag": "0003_light_invisible_woman",
+      "breakpoints": true
     }
   ]
 }

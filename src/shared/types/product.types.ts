@@ -33,7 +33,7 @@ export type ProductMutationInput = {
 
 export type ProductCreateInput = ProductMutationInput
 
-export type ProductUpdateInput = Partial<ProductMutationInput>
+export type ProductUpdateInput = Partial<Omit<ProductMutationInput, 'stockQuantity'>>
 
 export type ProductListFilters = {
   query?: string

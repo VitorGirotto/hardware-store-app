@@ -1,6 +1,10 @@
 import React from 'react'
 import { PRODUCT_UNITS, type ProductUnit } from '../../../../shared/constants/product.constants'
-import type { Product, ProductCreateInput } from '../../../../shared/types/product.types'
+import type {
+  Product,
+  ProductCreateInput,
+  ProductUpdateInput
+} from '../../../../shared/types/product.types'
 import { productApi } from './product.api'
 
 type ProductFormProps = {
@@ -90,7 +94,7 @@ export const ProductForm = ({
     }))
   }
 
-  const buildPayload = (): ProductCreateInput | null => {
+  const buildPayload = (): ProductCreateInput | ProductUpdateInput | null => {
     const costPriceInCents = parseMoneyInput(form.costPrice)
     const salePriceInCents = parseMoneyInput(form.salePrice)
     const stockQuantity = parseDecimalInput(form.stockQuantity)
@@ -107,7 +111,7 @@ export const ProductForm = ({
       return null
     }
 
-    return {
+    const editableFields: ProductUpdateInput = {
       name: form.name,
       internalCode: form.internalCode,
       barcode: textOrNull(form.barcode),
@@ -116,10 +120,18 @@ export const ProductForm = ({
       unitOfMeasure: form.unitOfMeasure,
       costPriceInCents,
       salePriceInCents,
-      stockQuantity,
       minimumStockQuantity,
       isActive: form.isActive
     }
+
+    if (product) {
+      return editableFields
+    }
+
+    return {
+      ...editableFields,
+      stockQuantity
+    } as ProductCreateInput
   }
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>): Promise<void> => {
@@ -136,8 +148,8 @@ export const ProductForm = ({
 
     try {
       const result = product
-        ? await productApi.update(product.id, payload)
-        : await productApi.create(payload)
+        ? await productApi.update(product.id, payload as ProductUpdateInput)
+        : await productApi.create(payload as ProductCreateInput)
 
       if (result.success) {
         onSaved(result.data)
@@ -258,12 +270,13 @@ export const ProductForm = ({
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <label className="block text-sm font-medium text-slate-200">
-            Estoque atual
+            {product ? 'Estoque atual' : 'Estoque inicial'}
             <input
               value={form.stockQuantity}
               onChange={(event) => updateField('stockQuantity', event.target.value)}
               inputMode="decimal"
-              className="mt-1 h-10 w-full border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 outline-none focus:border-amber-400"
+              disabled={Boolean(product)}
+              className="mt-1 h-10 w-full border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 outline-none focus:border-amber-400 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-400"
             />
           </label>
 

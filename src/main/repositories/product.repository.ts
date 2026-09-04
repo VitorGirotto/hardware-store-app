@@ -1,6 +1,6 @@
 import { and, desc, eq, like, ne, or, type SQL } from 'drizzle-orm'
 import { getDatabase } from '../db'
-import { products } from '../db/schema'
+import { products, stockMovements } from '../db/schema'
 import type {
   ProductCreateInput,
   ProductDuplicateCodeInput,
@@ -51,15 +51,33 @@ const buildListWhere = (filters: ProductListFilters = {}): SQL | undefined => {
 
 export const createProduct = (input: ProductCreateInput): ProductRecord => {
   const db = getDatabase()
+  const { stockQuantity, ...productInput } = input
 
-  return db
-    .insert(products)
-    .values({
-      ...input,
-      isActive: input.isActive ?? true
-    })
-    .returning()
-    .get()
+  return db.transaction((tx) => {
+    const product = tx
+      .insert(products)
+      .values({
+        ...productInput,
+        stockQuantity,
+        isActive: input.isActive ?? true
+      })
+      .returning()
+      .get()
+
+    if (stockQuantity > 0) {
+      tx.insert(stockMovements)
+        .values({
+          productId: product.id,
+          type: 'entry',
+          quantity: stockQuantity,
+          reason: 'Estoque inicial do produto',
+          reference: `product:${product.id}`
+        })
+        .run()
+    }
+
+    return product
+  })
 }
 
 export const listProducts = (filters: ProductListFilters = {}): ProductRecord[] => {

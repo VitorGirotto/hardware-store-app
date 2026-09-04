@@ -1,5 +1,6 @@
 import electron from 'electron'
 import { CUSTOMER_IPC_CHANNELS } from '../shared/constants/customer.constants'
+import { INVENTORY_IPC_CHANNELS } from '../shared/constants/inventory.constants'
 import { PRODUCT_IPC_CHANNELS } from '../shared/constants/product.constants'
 import type {
   Customer,
@@ -10,6 +11,15 @@ import type {
   CustomerServiceResponse,
   CustomerUpdateInput
 } from '../shared/types/customer.types'
+import type {
+  InventoryProduct,
+  InventoryServiceResponse,
+  StockAdjustmentInput,
+  StockEntryInput,
+  StockExitInput,
+  StockHistoryFilters,
+  StockMovement
+} from '../shared/types/inventory.types'
 import type {
   Product,
   ProductCreateInput,
@@ -48,6 +58,28 @@ const api = {
       input: CustomerDuplicateDocumentInput
     ): Promise<CustomerServiceResponse<CustomerDuplicateDocumentResult>> =>
       ipcRenderer.invoke(CUSTOMER_IPC_CHANNELS.checkDuplicateDocument, input)
+  },
+  inventory: {
+    registerEntry: (
+      input: StockEntryInput
+    ): Promise<InventoryServiceResponse<StockMovement>> =>
+      ipcRenderer.invoke(INVENTORY_IPC_CHANNELS.registerEntry, input),
+    registerExit: (
+      input: StockExitInput
+    ): Promise<InventoryServiceResponse<StockMovement>> =>
+      ipcRenderer.invoke(INVENTORY_IPC_CHANNELS.registerExit, input),
+    registerAdjustment: (
+      input: StockAdjustmentInput
+    ): Promise<InventoryServiceResponse<StockMovement>> =>
+      ipcRenderer.invoke(INVENTORY_IPC_CHANNELS.registerAdjustment, input),
+    listHistory: (
+      filters?: StockHistoryFilters
+    ): Promise<InventoryServiceResponse<StockMovement[]>> =>
+      ipcRenderer.invoke(INVENTORY_IPC_CHANNELS.listHistory, filters),
+    listCurrentStock: (): Promise<InventoryServiceResponse<InventoryProduct[]>> =>
+      ipcRenderer.invoke(INVENTORY_IPC_CHANNELS.listCurrentStock),
+    listLowStock: (): Promise<InventoryServiceResponse<InventoryProduct[]>> =>
+      ipcRenderer.invoke(INVENTORY_IPC_CHANNELS.listLowStock)
   },
   products: {
     create: (

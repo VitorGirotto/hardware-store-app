@@ -1,6 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { CustomersPage } from './pages/CustomersPage'
+import { InventoryPage } from './pages/InventoryPage'
 import { ProductsPage } from './pages/ProductsPage'
 import './styles.css'
 
@@ -107,6 +108,8 @@ const App = (): React.JSX.Element => {
           <ProductsPage />
         ) : activePage === 'Clientes' ? (
           <CustomersPage />
+        ) : activePage === 'Estoque' ? (
+          <InventoryPage />
         ) : (
           <PlaceholderPage page={activePage} />
         )}

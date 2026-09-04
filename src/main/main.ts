@@ -3,6 +3,7 @@ import type { BrowserWindow as ElectronBrowserWindow } from 'electron'
 import { join } from 'node:path'
 import { initializeDatabase, getDatabasePath } from './db'
 import { registerCustomerIpc } from './ipc/customer.ipc'
+import { registerInventoryIpc } from './ipc/inventory.ipc'
 import { registerProductIpc } from './ipc/product.ipc'
 
 const { app, BrowserWindow, ipcMain } = electron
@@ -40,6 +41,7 @@ app.whenReady().then(() => {
 
   ipcMain.handle('app:get-database-path', () => getDatabasePath())
   registerCustomerIpc()
+  registerInventoryIpc()
   registerProductIpc()
 
   createWindow()

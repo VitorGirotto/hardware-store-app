@@ -17,7 +17,7 @@ const nonNegativeQuantitySchema = z
   .number()
   .min(0, 'A quantidade nao pode ser negativa.')
 
-const productMutationFields = {
+const productEditableFields = {
   name: z.string().trim().min(1, 'Nome e obrigatorio.'),
   internalCode: z.string().trim().min(1, 'Codigo interno e obrigatorio.'),
   barcode: optionalTextSchema,
@@ -26,17 +26,17 @@ const productMutationFields = {
   unitOfMeasure: z.enum(PRODUCT_UNITS),
   costPriceInCents: nonNegativeMoneyInCentsSchema,
   salePriceInCents: nonNegativeMoneyInCentsSchema,
-  stockQuantity: nonNegativeQuantitySchema,
   minimumStockQuantity: nonNegativeQuantitySchema,
   isActive: z.boolean()
 }
 
 export const productCreateSchema = z.object({
-  ...productMutationFields,
-  isActive: productMutationFields.isActive.default(true)
+  ...productEditableFields,
+  stockQuantity: nonNegativeQuantitySchema,
+  isActive: productEditableFields.isActive.default(true)
 })
 
-export const productUpdateSchema = z.object(productMutationFields).partial()
+export const productUpdateSchema = z.object(productEditableFields).partial().strict()
 
 export const productIdSchema = z.number().int().positive('Produto invalido.')
 

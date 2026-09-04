@@ -1,5 +1,6 @@
 import { relations, sql } from 'drizzle-orm'
-import { integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import { index, integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import { STOCK_MOVEMENT_TYPES } from '../../shared/constants/inventory.constants'
 import { DEFAULT_PRODUCT_UNIT, PRODUCT_UNITS } from '../../shared/constants/product.constants'
 
 export const products = sqliteTable('products', {
@@ -30,6 +31,23 @@ export const customers = sqliteTable('customers', {
   createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
   updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`)
 })
+
+export const stockMovements = sqliteTable(
+  'stock_movements',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    productId: integer('product_id').notNull().references(() => products.id),
+    type: text('type', { enum: STOCK_MOVEMENT_TYPES }).notNull(),
+    quantity: real('quantity').notNull(),
+    reason: text('reason').notNull(),
+    reference: text('reference'),
+    createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`)
+  },
+  (table) => [
+    index('stock_movements_product_id_idx').on(table.productId),
+    index('stock_movements_created_at_idx').on(table.createdAt)
+  ]
+)
 
 export const cashRegisters = sqliteTable('cash_registers', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -97,5 +115,16 @@ export const paymentsRelations = relations(payments, ({ one }) => ({
   sale: one(sales, {
     fields: [payments.saleId],
     references: [sales.id]
+  })
+}))
+
+export const productsRelations = relations(products, ({ many }) => ({
+  stockMovements: many(stockMovements)
+}))
+
+export const stockMovementsRelations = relations(stockMovements, ({ one }) => ({
+  product: one(products, {
+    fields: [stockMovements.productId],
+    references: [products.id]
   })
 }))

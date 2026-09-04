@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { customers, products } from './schema'
+import { customers, products, stockMovements } from './schema'
 
 describe('database schema', () => {
   it('defines the products table', () => {
@@ -27,5 +27,15 @@ describe('database schema', () => {
     expect(customers.isActive).toBeDefined()
     expect(customers.createdAt).toBeDefined()
     expect(customers.updatedAt).toBeDefined()
+  })
+
+  it('defines the stock movements table', () => {
+    expect(stockMovements.id).toBeDefined()
+    expect(stockMovements.productId).toBeDefined()
+    expect(stockMovements.type).toBeDefined()
+    expect(stockMovements.quantity).toBeDefined()
+    expect(stockMovements.reason).toBeDefined()
+    expect(stockMovements.reference).toBeDefined()
+    expect(stockMovements.createdAt).toBeDefined()
   })
 })
