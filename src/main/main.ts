@@ -2,6 +2,7 @@ import electron from 'electron'
 import type { BrowserWindow as ElectronBrowserWindow } from 'electron'
 import { join } from 'node:path'
 import { initializeDatabase, getDatabasePath } from './db'
+import { registerCashRegisterIpc } from './ipc/cash-register.ipc'
 import { registerCustomerIpc } from './ipc/customer.ipc'
 import { registerInventoryIpc } from './ipc/inventory.ipc'
 import { registerProductIpc } from './ipc/product.ipc'
@@ -40,6 +41,7 @@ app.whenReady().then(() => {
   initializeDatabase()
 
   ipcMain.handle('app:get-database-path', () => getDatabasePath())
+  registerCashRegisterIpc()
   registerCustomerIpc()
   registerInventoryIpc()
   registerProductIpc()

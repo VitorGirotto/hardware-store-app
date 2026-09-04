@@ -1,7 +1,15 @@
 import electron from 'electron'
+import { CASH_REGISTER_IPC_CHANNELS } from '../shared/constants/cash-register.constants'
 import { CUSTOMER_IPC_CHANNELS } from '../shared/constants/customer.constants'
 import { INVENTORY_IPC_CHANNELS } from '../shared/constants/inventory.constants'
 import { PRODUCT_IPC_CHANNELS } from '../shared/constants/product.constants'
+import type {
+  CashRegister,
+  CashRegisterCloseInput,
+  CashRegisterOpenInput,
+  CashRegisterServiceResponse,
+  CashRegisterSummary
+} from '../shared/types/cash-register.types'
 import type {
   Customer,
   CustomerCreateInput,
@@ -34,6 +42,23 @@ const { contextBridge, ipcRenderer } = electron
 
 const api = {
   getDatabasePath: (): Promise<string> => ipcRenderer.invoke('app:get-database-path'),
+  cashRegisters: {
+    open: (
+      input: CashRegisterOpenInput
+    ): Promise<CashRegisterServiceResponse<CashRegister>> =>
+      ipcRenderer.invoke(CASH_REGISTER_IPC_CHANNELS.open, input),
+    close: (
+      input: CashRegisterCloseInput
+    ): Promise<CashRegisterServiceResponse<CashRegisterSummary>> =>
+      ipcRenderer.invoke(CASH_REGISTER_IPC_CHANNELS.close, input),
+    getOpen: (): Promise<CashRegisterServiceResponse<CashRegister | null>> =>
+      ipcRenderer.invoke(CASH_REGISTER_IPC_CHANNELS.getOpen),
+    listPrevious: (): Promise<CashRegisterServiceResponse<CashRegister[]>> =>
+      ipcRenderer.invoke(CASH_REGISTER_IPC_CHANNELS.listPrevious),
+    getCurrentSummary: (): Promise<
+      CashRegisterServiceResponse<CashRegisterSummary | null>
+    > => ipcRenderer.invoke(CASH_REGISTER_IPC_CHANNELS.getCurrentSummary)
+  },
   customers: {
     create: (
       input: CustomerCreateInput

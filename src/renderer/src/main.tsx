@@ -1,6 +1,8 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+import { CashRegisterPage } from './pages/CashRegisterPage'
 import { CustomersPage } from './pages/CustomersPage'
+import { DashboardPage } from './pages/DashboardPage'
 import { InventoryPage } from './pages/InventoryPage'
 import { ProductsPage } from './pages/ProductsPage'
 import './styles.css'
@@ -104,12 +106,16 @@ const App = (): React.JSX.Element => {
 
       <div className="flex min-h-screen min-w-0 flex-1 flex-col">
         <Header activePage={activePage} />
-        {activePage === 'Produtos' ? (
+        {activePage === 'Dashboard' ? (
+          <DashboardPage />
+        ) : activePage === 'Produtos' ? (
           <ProductsPage />
         ) : activePage === 'Clientes' ? (
           <CustomersPage />
         ) : activePage === 'Estoque' ? (
           <InventoryPage />
+        ) : activePage === 'Caixa' ? (
+          <CashRegisterPage />
         ) : (
           <PlaceholderPage page={activePage} />
         )}

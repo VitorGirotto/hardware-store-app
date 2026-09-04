@@ -29,6 +29,13 @@
       "when": 1788473457756,
       "tag": "0003_light_invisible_woman",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1788530374007,
+      "tag": "0004_majestic_crystal",
+      "breakpoints": true
     }
   ]
 }

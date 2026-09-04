@@ -206,7 +206,7 @@ export const CustomersPage = (): React.JSX.Element => {
         </section>
 
         {isFormOpen ? (
-          <aside className="min-h-[520px] xl:min-h-0">
+          <aside className="min-h-130 xl:min-h-0">
             <CustomerForm
               customer={editingCustomer}
               onCancel={() => {

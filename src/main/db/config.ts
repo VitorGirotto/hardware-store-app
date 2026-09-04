@@ -35,6 +35,10 @@ export const resolveDatabasePath = (
     throw new Error('HARDWARE_STORE_DB_PATH must be set before opening the database')
   }
 
+  if (value === ':memory:') {
+    return value
+  }
+
   return isAbsolute(value) ? value : resolve(basePath, value)
 }
 

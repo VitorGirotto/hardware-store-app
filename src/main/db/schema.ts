@@ -1,5 +1,6 @@
 import { relations, sql } from 'drizzle-orm'
-import { index, integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import { index, integer, real, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
+import { CASH_REGISTER_STATUSES } from '../../shared/constants/cash-register.constants'
 import { STOCK_MOVEMENT_TYPES } from '../../shared/constants/inventory.constants'
 import { DEFAULT_PRODUCT_UNIT, PRODUCT_UNITS } from '../../shared/constants/product.constants'
 
@@ -49,15 +50,25 @@ export const stockMovements = sqliteTable(
   ]
 )
 
-export const cashRegisters = sqliteTable('cash_registers', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
-  openedAt: text('opened_at').notNull().default(sql`CURRENT_TIMESTAMP`),
-  closedAt: text('closed_at'),
-  openingAmountInCents: integer('opening_amount_in_cents').notNull().default(0),
-  closingAmountInCents: integer('closing_amount_in_cents'),
-  status: text('status', { enum: ['open', 'closed'] }).notNull().default('open'),
-  notes: text('notes')
-})
+export const cashRegisters = sqliteTable(
+  'cash_registers',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    openedAt: text('opened_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+    closedAt: text('closed_at'),
+    openingAmountInCents: integer('opening_amount_in_cents').notNull().default(0),
+    closingAmountInCents: integer('closing_amount_in_cents'),
+    differenceInCents: integer('difference_in_cents'),
+    status: text('status', { enum: CASH_REGISTER_STATUSES }).notNull().default('open'),
+    notes: text('notes')
+  },
+  (table) => [
+    uniqueIndex('cash_registers_single_open_idx')
+      .on(table.status)
+      .where(sql`${table.status} = 'open'`),
+    index('cash_registers_opened_at_idx').on(table.openedAt)
+  ]
+)
 
 export const sales = sqliteTable('sales', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -98,6 +109,10 @@ export const salesRelations = relations(sales, ({ one, many }) => ({
   }),
   items: many(saleItems),
   payments: many(payments)
+}))
+
+export const cashRegistersRelations = relations(cashRegisters, ({ many }) => ({
+  sales: many(sales)
 }))
 
 export const saleItemsRelations = relations(saleItems, ({ one }) => ({
