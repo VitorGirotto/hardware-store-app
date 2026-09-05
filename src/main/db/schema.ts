@@ -73,7 +73,7 @@ export const cashRegisters = sqliteTable(
 export const sales = sqliteTable('sales', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   customerId: integer('customer_id').references(() => customers.id),
-  cashRegisterId: integer('cash_register_id').references(() => cashRegisters.id),
+  cashRegisterId: integer('cash_register_id').notNull().references(() => cashRegisters.id),
   subtotalInCents: integer('subtotal_in_cents').notNull(),
   discountInCents: integer('discount_in_cents').notNull().default(0),
   totalInCents: integer('total_in_cents').notNull(),
@@ -85,15 +85,17 @@ export const saleItems = sqliteTable('sale_items', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   saleId: integer('sale_id').notNull().references(() => sales.id),
   productId: integer('product_id').notNull().references(() => products.id),
+  productName: text('product_name').notNull(),
   quantity: real('quantity').notNull(),
   unitPriceInCents: integer('unit_price_in_cents').notNull(),
+  discountInCents: integer('discount_in_cents').notNull().default(0),
   totalInCents: integer('total_in_cents').notNull()
 })
 
 export const payments = sqliteTable('payments', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   saleId: integer('sale_id').notNull().references(() => sales.id),
-  method: text('method', { enum: ['cash', 'debit_card', 'credit_card', 'pix', 'other'] }).notNull(),
+  method: text('method', { enum: ['cash', 'debit_card', 'credit_card', 'pix'] }).notNull(),
   amountInCents: integer('amount_in_cents').notNull(),
   paidAt: text('paid_at').notNull().default(sql`CURRENT_TIMESTAMP`)
 })
