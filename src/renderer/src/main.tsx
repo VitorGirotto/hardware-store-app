@@ -4,6 +4,8 @@ import { CashRegisterPage } from './pages/CashRegisterPage'
 import { CustomersPage } from './pages/CustomersPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { InventoryPage } from './pages/InventoryPage'
+import { SalesPage } from './pages/SalesPage'
+import { emptySalesDraft } from './features/sales/sales-draft'
 import { ProductsPage } from './pages/ProductsPage'
 import './styles.css'
 
@@ -12,11 +14,12 @@ const pages = ['Dashboard', 'Produtos', 'Clientes', 'Vendas', 'Estoque', 'Caixa'
 type Page = (typeof pages)[number]
 
 type SidebarProps = {
+  disabled: boolean
   activePage: Page
   onPageChange: (page: Page) => void
 }
 
-const Sidebar = ({ activePage, onPageChange }: SidebarProps): React.JSX.Element => {
+const Sidebar = ({ activePage, onPageChange, disabled }: SidebarProps): React.JSX.Element => {
   return (
     <aside className="flex min-h-screen w-64 shrink-0 flex-col border-r border-slate-800 bg-slate-950 px-4 py-5">
       <div className="mb-8 flex items-center gap-3 px-2">
@@ -36,6 +39,7 @@ const Sidebar = ({ activePage, onPageChange }: SidebarProps): React.JSX.Element 
           return (
             <button
               key={page}
+              disabled={disabled}
               type="button"
               onClick={() => onPageChange(page)}
               className={[
@@ -99,10 +103,12 @@ const PlaceholderPage = ({ page }: PlaceholderPageProps): React.JSX.Element => {
 
 const App = (): React.JSX.Element => {
   const [activePage, setActivePage] = React.useState<Page>('Dashboard')
+  const [salesDraft, setSalesDraft] = React.useState(emptySalesDraft)
+  const [submittingSale, setSubmittingSale] = React.useState(false)
 
   return (
     <div className="flex min-h-screen bg-slate-950 text-slate-100">
-      <Sidebar activePage={activePage} onPageChange={setActivePage} />
+      <Sidebar disabled={submittingSale} activePage={activePage} onPageChange={setActivePage} />
 
       <div className="flex min-h-screen min-w-0 flex-1 flex-col">
         <Header activePage={activePage} />
@@ -112,6 +118,8 @@ const App = (): React.JSX.Element => {
           <ProductsPage />
         ) : activePage === 'Clientes' ? (
           <CustomersPage />
+        ) : activePage === 'Vendas' ? (
+          <SalesPage draft={salesDraft} setDraft={setSalesDraft} submitting={submittingSale} setSubmitting={setSubmittingSale} onOpenCashRegister={() => setActivePage('Caixa')} />
         ) : activePage === 'Estoque' ? (
           <InventoryPage />
         ) : activePage === 'Caixa' ? (

@@ -21,6 +21,7 @@
     "dist": "npm run build && electron-builder",
     "test": "HARDWARE_STORE_DB_ENV=test HARDWARE_STORE_DB_PATH=:memory: vitest run",
     "typecheck": "tsc --noEmit",
+    "test:ui": "electron scripts/test-sales-ui.cjs",
     "db:generate": "HARDWARE_STORE_DB_ENV=development HARDWARE_STORE_DB_PATH=database/development/hardware-store.db drizzle-kit generate",
     "db:migrate": "npm run db:migrate:dev",
     "db:migrate:dev": "HARDWARE_STORE_DB_ENV=development HARDWARE_STORE_DB_PATH=database/development/hardware-store.db drizzle-kit migrate",

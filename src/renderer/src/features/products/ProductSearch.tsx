@@ -35,7 +35,7 @@ export const ProductSearch = ({
         value={query}
         onChange={(event) => setQuery(event.target.value)}
         className="h-10 min-w-72 flex-1 border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-amber-400"
-        placeholder="Nome, codigo interno ou barras"
+        placeholder="Nome, código interno, barras ou categoria"
       />
 
       <label className="flex h-10 items-center gap-2 border border-slate-700 px-3 text-sm text-slate-200">
