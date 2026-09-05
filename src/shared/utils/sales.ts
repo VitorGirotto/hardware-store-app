@@ -35,3 +35,15 @@ export const validateSalePayments = (payments: PaymentInput[], totalInCents: num
   }, 0)
   if (paid !== totalInCents) throw new Error('A soma dos pagamentos deve ser igual ao total da venda.')
 }
+
+// SQLite REAL and JS numbers can leave a tiny binary residue (0.3 - 0.1 - 0.2).
+// Only absorb floating-point noise relative to the operands, never a business-unit tolerance.
+export const stockAfterSale = (stock: number, quantity: number): number => {
+  if (!Number.isFinite(stock) || !Number.isFinite(quantity) || stock < 0 || quantity <= 0) {
+    throw new Error('Quantidade ou estoque inválido.')
+  }
+  const remaining = stock - quantity
+  const tolerance = Number.EPSILON * Math.max(stock, quantity) * 4
+  if (remaining < -tolerance) throw new Error('Estoque insuficiente.')
+  return Math.abs(remaining) <= tolerance ? 0 : remaining
+}

@@ -5,6 +5,7 @@ import { initializeDatabase, getDatabasePath } from './db'
 import { registerCashRegisterIpc } from './ipc/cash-register.ipc'
 import { registerCustomerIpc } from './ipc/customer.ipc'
 import { registerInventoryIpc } from './ipc/inventory.ipc'
+import { registerSalesIpc } from './ipc/sales.ipc'
 import { registerProductIpc } from './ipc/product.ipc'
 
 const { app, BrowserWindow, ipcMain } = electron
@@ -45,6 +46,7 @@ app.whenReady().then(() => {
   registerCustomerIpc()
   registerInventoryIpc()
   registerProductIpc()
+  registerSalesIpc()
 
   createWindow()
 

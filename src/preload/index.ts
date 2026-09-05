@@ -1,4 +1,6 @@
 import electron from 'electron'
+import { SALES_IPC_CHANNELS } from '../shared/constants/sales.constants'
+import type { Sale, SaleFinalizeInput, SaleServiceResponse } from '../shared/types/sales.types'
 import { CASH_REGISTER_IPC_CHANNELS } from '../shared/constants/cash-register.constants'
 import { CUSTOMER_IPC_CHANNELS } from '../shared/constants/customer.constants'
 import { INVENTORY_IPC_CHANNELS } from '../shared/constants/inventory.constants'
@@ -41,6 +43,10 @@ import type {
 const { contextBridge, ipcRenderer } = electron
 
 const api = {
+  sales: {
+    finalize: (input: SaleFinalizeInput): Promise<SaleServiceResponse<Sale>> =>
+      ipcRenderer.invoke(SALES_IPC_CHANNELS.finalize, input)
+  },
   getDatabasePath: (): Promise<string> => ipcRenderer.invoke('app:get-database-path'),
   cashRegisters: {
     open: (

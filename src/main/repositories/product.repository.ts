@@ -38,7 +38,8 @@ const buildListWhere = (filters: ProductListFilters = {}): SQL | undefined => {
     const searchWhere = or(
       like(products.name, search),
       like(products.internalCode, search),
-      like(products.barcode, search)
+      like(products.barcode, search),
+      like(products.category, search)
     )
 
     if (searchWhere) {
