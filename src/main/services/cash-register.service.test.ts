@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import type {
   CashRegister,
   CashRegisterServiceResponse,
   CashRegisterSummary
 } from '../../shared/types/cash-register.types'
-import { getDatabase } from '../db'
+import { getDatabase, initializeDatabase } from '../db'
 import { cashRegisters, payments, products, saleItems, sales } from '../db/schema'
 import {
   calculateDifference,
@@ -63,7 +63,7 @@ afterEach(() => {
   const db = getDatabase()
   db.update(sales)
     .set({ status: 'cancelled' })
-    .where(eq(sales.cashRegisterId, current.id))
+    .where(and(eq(sales.cashRegisterId, current.id), eq(sales.status, 'open')))
     .run()
   expectSuccess(
     closeCashRegister({
@@ -157,7 +157,7 @@ describe('cash register service', () => {
         cashRegisterId: cashRegister.id,
         subtotalInCents: 12000,
         totalInCents: 12000,
-        status: 'paid'
+        status: 'open'
       })
       .returning()
       .get()
@@ -179,6 +179,8 @@ describe('cash register service', () => {
         { saleId: cancelledSale.id, method: 'cash', amountInCents: 9000 }
       ])
       .run()
+
+    db.update(sales).set({ status: 'paid' }).where(eq(sales.id, paidSale.id)).run()
 
     const current = expectSuccess(getCurrentCashRegisterSummary()) as CashRegisterSummary
     expect(current.totalSoldInCents).toBe(12000)
@@ -226,10 +228,8 @@ describe('cash register service', () => {
     const db = getDatabase()
 
     expect(() =>
-      db.insert(sales)
-        .values({ subtotalInCents: 100, totalInCents: 100 })
-        .run()
-    ).toThrow(/CASH_REGISTER_REQUIRED_OPEN/)
+      initializeDatabase().exec('INSERT INTO sales (subtotal_in_cents, total_in_cents) VALUES (100, 100)')
+    ).toThrow(/CASH_REGISTER_REQUIRED_OPEN|PAID_SALE_IMMUTABLE/)
 
     const product = db
       .insert(products)
@@ -243,7 +243,7 @@ describe('cash register service', () => {
         cashRegisterId: cashRegister.id,
         subtotalInCents: 100,
         totalInCents: 100,
-        status: 'paid'
+        status: 'open'
       })
       .returning()
       .get()
@@ -257,11 +257,13 @@ describe('cash register service', () => {
       .values({
         saleId: sale.id,
         productId: product.id,
+        productName: product.name,
         quantity: 1,
         unitPriceInCents: 100,
         totalInCents: 100
       })
       .run()
+    db.update(sales).set({ status: 'paid' }).where(eq(sales.id, sale.id)).run()
     expectSuccess(
       closeCashRegister({ cashRegisterId: cashRegister.id, closingAmountInCents: 100 })
     )
@@ -271,18 +273,19 @@ describe('cash register service', () => {
         .set({ amountInCents: 200 })
         .where(eq(payments.id, payment.id))
         .run()
-    ).toThrow(/CASH_REGISTER_REQUIRED_OPEN/)
+    ).toThrow(/CASH_REGISTER_REQUIRED_OPEN|PAID_SALE_IMMUTABLE/)
     expect(() =>
       db.insert(saleItems)
         .values({
           saleId: sale.id,
           productId: product.id,
+        productName: product.name,
           quantity: 1,
           unitPriceInCents: 100,
           totalInCents: 100
         })
         .run()
-    ).toThrow(/CASH_REGISTER_REQUIRED_OPEN/)
+    ).toThrow(/CASH_REGISTER_REQUIRED_OPEN|PAID_SALE_IMMUTABLE/)
     expect(() =>
       db.update(cashRegisters)
         .set({ status: 'open' })

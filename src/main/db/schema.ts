@@ -1,6 +1,7 @@
 import { relations, sql } from 'drizzle-orm'
 import { index, integer, real, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
 import { CASH_REGISTER_STATUSES } from '../../shared/constants/cash-register.constants'
+import { PAYMENT_METHODS, SALE_STATUSES } from '../../shared/constants/sales.constants'
 import { STOCK_MOVEMENT_TYPES } from '../../shared/constants/inventory.constants'
 import { DEFAULT_PRODUCT_UNIT, PRODUCT_UNITS } from '../../shared/constants/product.constants'
 
@@ -77,7 +78,7 @@ export const sales = sqliteTable('sales', {
   subtotalInCents: integer('subtotal_in_cents').notNull(),
   discountInCents: integer('discount_in_cents').notNull().default(0),
   totalInCents: integer('total_in_cents').notNull(),
-  status: text('status', { enum: ['open', 'paid', 'cancelled'] }).notNull().default('open'),
+  status: text('status', { enum: SALE_STATUSES }).notNull().default('open'),
   createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`)
 })
 
@@ -95,7 +96,7 @@ export const saleItems = sqliteTable('sale_items', {
 export const payments = sqliteTable('payments', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   saleId: integer('sale_id').notNull().references(() => sales.id),
-  method: text('method', { enum: ['cash', 'debit_card', 'credit_card', 'pix'] }).notNull(),
+  method: text('method', { enum: PAYMENT_METHODS }).notNull(),
   amountInCents: integer('amount_in_cents').notNull(),
   paidAt: text('paid_at').notNull().default(sql`CURRENT_TIMESTAMP`)
 })
