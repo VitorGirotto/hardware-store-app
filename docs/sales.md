@@ -34,3 +34,9 @@ npm run test:ui
 O teste de interface usa o renderer compilado em uma janela oculta do Electron, perfil temporário e API simulada. Cobre navegação, cancelamento, respostas de busca fora de ordem, campos decimais, preço e descontos editados, cliente, pagamentos mistos, preservação do carrinho no erro, envio duplicado, falha de atualização após sucesso e caixa fechado. Salva uma captura em `/tmp/hardware-pdv.png` em Linux. Requer ambiente gráfico disponível.
 
 Os testes de integração do service usam SQLite real em memória, com as migrações e triggers reais. Incluem falha forçada na baixa do segundo produto e conferência de rollback de todas as tabelas envolvidas. Os testes de migração cobrem banco vazio, dados anteriores e falha sem mudanças parciais.
+
+## Recibo
+
+Após a confirmação da venda, o PDV exibe um recibo com nome da loja, data/hora local, itens e nomes gravados, quantidades, preços unitários, descontos, totais e todas as formas de pagamento com seus valores. O nome acompanha `STORE_NAME`, usado também na navegação do aplicativo.
+
+“Imprimir recibo” abre a impressão do sistema e imprime somente o recibo. “Ver último recibo” permite reabrir o recibo da última venda concluída durante a sessão, inclusive após navegar para outras telas. Esta etapa não inclui histórico de recibos nem recuperação após reiniciar o aplicativo.

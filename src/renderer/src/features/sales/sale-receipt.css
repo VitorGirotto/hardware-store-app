@@ -1,0 +1,53 @@
+.sale-receipt-dialog {
+  color-scheme: light;
+  color: #111827;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 24px;
+  margin: auto;
+  width: min(640px, calc(100vw - 32px));
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  font-size: 14px;
+}
+.sale-receipt-dialog::backdrop { background: rgb(0 0 0 / 65%); }
+.sale-receipt-actions { display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 24px; }
+.sale-receipt-actions button { border: 1px solid #64748b; border-radius: 4px; padding: 8px 12px; cursor: pointer; }
+.sale-receipt-actions button:hover { background: #f1f5f9; }
+.sale-receipt-actions button:focus-visible { outline: 2px solid #1d4ed8; outline-offset: 2px; }
+.sale-receipt-header { text-align: center; margin-bottom: 24px; }
+.sale-receipt-header h2 { font-size: 24px; font-weight: 700; }
+.sale-receipt-header p { margin-top: 4px; }
+.sale-receipt-items { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.sale-receipt-items caption { text-align: left; font-weight: 600; margin-bottom: 8px; }
+.sale-receipt-items th, .sale-receipt-items td { padding: 10px 4px; text-align: right; vertical-align: top; border-bottom: 1px solid #e2e8f0; overflow-wrap: anywhere; }
+.sale-receipt-items th:first-child, .sale-receipt-items td:first-child { text-align: left; width: 40%; }
+.sale-receipt-items small { display: block; font-size: 12px; margin-top: 4px; }
+.sale-receipt-totals { margin-top: 16px; }
+.sale-receipt-totals > div, .sale-receipt-payments dl > div { display: flex; justify-content: space-between; gap: 16px; margin-top: 8px; }
+.sale-receipt-dialog dd { white-space: nowrap; }
+.sale-receipt-total { border-top: 1px solid #64748b; padding-top: 12px; font-size: 20px; font-weight: 700; }
+.sale-receipt-payments { margin-top: 24px; }
+.sale-receipt-payments h3 { font-weight: 600; }
+.sale-receipt-payments p { margin-top: 8px; }
+
+@media print {
+  body:has(.sale-receipt-dialog[open]) { color-scheme: light; background: white; }
+  body:has(.sale-receipt-dialog[open]) > :not(.sale-receipt-dialog) { display: none !important; }
+  .sale-receipt-dialog[open] {
+    position: static;
+    width: 100%;
+    max-width: none;
+    height: auto;
+    max-height: none;
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    margin: 0;
+  }
+  .sale-receipt-dialog::backdrop { background: transparent; }
+  .sale-receipt-actions { display: none; }
+  .sale-receipt-items tr, .sale-receipt-totals, .sale-receipt-payments { break-inside: avoid; }
+}

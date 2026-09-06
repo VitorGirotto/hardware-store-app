@@ -1,4 +1,6 @@
 import React from 'react'
+import type { Sale } from '../../../shared/types/sales.types'
+import { SaleReceipt } from '../features/sales/SaleReceipt'
 import type { Customer } from '../../../shared/types/customer.types'
 import type { Product } from '../../../shared/types/product.types'
 import type { CashRegisterSummary } from '../../../shared/types/cash-register.types'
@@ -14,13 +16,16 @@ import { salesApi } from '../features/sales/sales.api'
 import { addProduct, buttonClass, draftToInput, emptySalesDraft, fieldClass, formatMoney, type SalesDraft } from '../features/sales/sales-draft'
 
 type Props = {
+  lastSale: Sale | null
+  onSaleFinalized: (sale: Sale) => void
   draft: SalesDraft
   setDraft: React.Dispatch<React.SetStateAction<SalesDraft>>
   submitting: boolean
   setSubmitting: (value: boolean) => void
   onOpenCashRegister: () => void
 }
-export const SalesPage = ({ draft, setDraft, submitting, setSubmitting, onOpenCashRegister }: Props): React.JSX.Element => {
+export const SalesPage = ({ draft, setDraft, submitting, setSubmitting, onOpenCashRegister, lastSale, onSaleFinalized }: Props): React.JSX.Element => {
+  const [receiptOpen, setReceiptOpen] = React.useState(false)
   const [summary, setSummary] = React.useState<CashRegisterSummary | null>(null)
   const [customers, setCustomers] = React.useState<Customer[]>([])
   const [available, setAvailable] = React.useState<Product[]>([])
@@ -89,6 +94,8 @@ export const SalesPage = ({ draft, setDraft, submitting, setSubmitting, onOpenCa
         setRefreshKey((value) => value + 1)
         return
       }
+      onSaleFinalized(response.data)
+      setReceiptOpen(true)
       setDraft(emptySalesDraft())
       setConfirmCancel(false)
       setNotice({ success: true, text: `Venda #${response.data.id} finalizada com sucesso. Total: ${formatMoney(response.data.totalInCents)}.` })
@@ -104,9 +111,11 @@ export const SalesPage = ({ draft, setDraft, submitting, setSubmitting, onOpenCa
   }
 
   return <main className="min-w-0 flex-1 overflow-y-auto bg-slate-950 px-6 py-6 text-slate-100">
+    {receiptOpen && lastSale ? <SaleReceipt sale={lastSale} onClose={() => setReceiptOpen(false)} /> : null}
     <header className="mb-6 flex flex-wrap items-center justify-between gap-4">
       <div><h1 className="text-2xl font-semibold">Ponto de venda</h1><p className="mt-1 text-sm text-slate-400">Adicione os itens, confira os valores e finalize a venda.</p></div>
       <div className="flex items-center gap-3"><span className={`rounded px-3 py-2 text-sm ${summary && !loadError ? 'bg-emerald-500/10 text-emerald-300' : 'bg-slate-800 text-slate-300'}`}>{loading ? 'Consultando caixa...' : loadError ? 'Caixa indisponível' : summary ? `Caixa #${summary.cashRegister.id} aberto` : 'Caixa fechado'}</span>
+        {lastSale ? <button type="button" disabled={submitting} className={buttonClass} onClick={() => setReceiptOpen(true)}>Ver último recibo</button> : null}
         <button type="button" disabled={disabled} className={buttonClass} onClick={() => { void loadContext(); setRefreshKey((value) => value + 1) }}>Atualizar</button></div>
     </header>
     {notice ? <div role={notice.success ? 'status' : 'alert'} className={`mb-4 rounded border p-3 text-sm ${notice.success ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-100' : 'border-red-500/40 bg-red-500/10 text-red-100'}`}>{notice.text}</div> : null}

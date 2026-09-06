@@ -33,7 +33,17 @@ contextBridge.exposeInMainWorld('hardwareStore', {
     sold += total
     cash += input.payments.filter((p) => p.method === 'cash').reduce((sum, p) => sum + p.amountInCents, 0)
     input.items.forEach((item) => { products.find((p) => p.id === item.productId).stockQuantity -= item.quantity })
-    return ok({ id: calls, totalInCents: total })
+    const createdAt = '2026-09-06 15:30:00'
+    return ok({
+      id: calls, status: 'paid', createdAt,
+      cashRegisterId: input.cashRegisterId, customerId: input.customerId ?? null,
+      subtotalInCents: total + input.discountInCents, discountInCents: input.discountInCents,
+      totalInCents: total,
+      items: input.items.map((item, index) => ({ ...item, id: index + 1, saleId: calls,
+        productName: products.find((p) => p.id === item.productId).name,
+        totalInCents: Math.round(item.quantity * item.unitPriceInCents) - item.discountInCents })),
+      payments: input.payments.map((payment, index) => ({ ...payment, id: index + 1, saleId: calls, paidAt: createdAt }))
+    })
   } }
 })
 contextBridge.exposeInMainWorld('salesTest', {

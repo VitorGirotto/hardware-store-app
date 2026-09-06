@@ -1,4 +1,6 @@
 import React from 'react'
+import { STORE_NAME } from '../../shared/constants/store.constants'
+import type { Sale } from '../../shared/types/sales.types'
 import ReactDOM from 'react-dom/client'
 import { CashRegisterPage } from './pages/CashRegisterPage'
 import { CustomersPage } from './pages/CustomersPage'
@@ -27,7 +29,7 @@ const Sidebar = ({ activePage, onPageChange, disabled }: SidebarProps): React.JS
           HS
         </div>
         <div>
-          <p className="text-base font-semibold text-slate-50">Hardware Store</p>
+          <p className="text-base font-semibold text-slate-50">{STORE_NAME}</p>
           <p className="text-xs text-slate-400">Gestão</p>
         </div>
       </div>
@@ -104,6 +106,7 @@ const PlaceholderPage = ({ page }: PlaceholderPageProps): React.JSX.Element => {
 const App = (): React.JSX.Element => {
   const [activePage, setActivePage] = React.useState<Page>('Dashboard')
   const [salesDraft, setSalesDraft] = React.useState(emptySalesDraft)
+  const [lastSale, setLastSale] = React.useState<Sale | null>(null)
   const [submittingSale, setSubmittingSale] = React.useState(false)
 
   return (
@@ -119,7 +122,7 @@ const App = (): React.JSX.Element => {
         ) : activePage === 'Clientes' ? (
           <CustomersPage />
         ) : activePage === 'Vendas' ? (
-          <SalesPage draft={salesDraft} setDraft={setSalesDraft} submitting={submittingSale} setSubmitting={setSubmittingSale} onOpenCashRegister={() => setActivePage('Caixa')} />
+          <SalesPage lastSale={lastSale} onSaleFinalized={setLastSale} draft={salesDraft} setDraft={setSalesDraft} submitting={submittingSale} setSubmitting={setSubmittingSale} onOpenCashRegister={() => setActivePage('Caixa')} />
         ) : activePage === 'Estoque' ? (
           <InventoryPage />
         ) : activePage === 'Caixa' ? (
