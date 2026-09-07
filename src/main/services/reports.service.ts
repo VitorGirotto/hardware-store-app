@@ -1,0 +1,12 @@
+import type { z } from 'zod'
+import { salesReportSchema } from '../../shared/schemas/reports.schema'
+import type { ReportResponse, SalesReport } from '../../shared/types/reports.types'
+import * as repository from '../repositories/reports.repository'
+
+const run = <I, O>(schema: z.ZodType<I>, input: unknown, query: (filters: I) => O): ReportResponse<O> => {
+  const parsed = schema.safeParse(input)
+  if (!parsed.success) return { success: false, error: 'Filtros do relatório inválidos.', issues: parsed.error.issues.map((issue) => issue.message) }
+  try { return { success: true, data: query(parsed.data) } }
+  catch { return { success: false, error: 'Não foi possível gerar o relatório. Tente novamente.' } }
+}
+export const sales = (input: unknown): ReportResponse<SalesReport> => run(salesReportSchema, input, repository.salesReport)

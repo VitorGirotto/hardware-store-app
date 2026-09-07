@@ -1,3 +1,4 @@
+import { registerReportsIpc } from './ipc/reports.ipc'
 import electron from 'electron'
 import type { BrowserWindow as ElectronBrowserWindow } from 'electron'
 import { join } from 'node:path'
@@ -47,6 +48,7 @@ app.whenReady().then(() => {
   registerInventoryIpc()
   registerProductIpc()
   registerSalesIpc()
+  registerReportsIpc()
 
   createWindow()
 
