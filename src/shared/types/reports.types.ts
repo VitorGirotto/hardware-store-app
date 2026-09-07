@@ -17,3 +17,21 @@ export type TopProductReportRow = {
   quantitySold: number
   totalSoldInCents: number
 }
+export type LowStockReportRow = {
+  productId: number
+  productName: string
+  unitOfMeasure: string
+  stockQuantity: number
+  minimumStockQuantity: number
+  missingQuantity: number
+}
+export type CashRegisterReportRow = {
+  id: number
+  openedAt: string
+  closedAt: string | null
+  openingAmountInCents: number
+  totalSoldInCents: number
+  expectedCashInCents: number
+  closingAmountInCents: number | null
+  differenceInCents: number | null
+}

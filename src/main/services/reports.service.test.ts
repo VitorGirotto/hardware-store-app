@@ -94,3 +94,43 @@ describe('top product reports', () => {
     expect(reports.topProducts({ ...period, paymentMethod: 'pix' }).success).toBe(false)
   })
 })
+
+describe('low stock report', () => {
+  it('includes active products at or below minimum with fractional shortages', () => {
+    const db = getDatabase()
+    const a = product('A'), b = product('B'), c = product('C'), d = product('D')
+    db.update(products).set({ stockQuantity: 0.25, minimumStockQuantity: 1.5 }).where(eq(products.id, a.id)).run()
+    db.update(products).set({ stockQuantity: 2, minimumStockQuantity: 1 }).where(eq(products.id, c.id)).run()
+    db.update(products).set({ isActive: false }).where(eq(products.id, d.id)).run()
+    expect(data(reports.lowStock())).toEqual([
+      { productId: a.id, productName: 'A', unitOfMeasure: a.unitOfMeasure, stockQuantity: 0.25, minimumStockQuantity: 1.5, missingQuantity: 1.25 },
+      { productId: b.id, productName: 'B', unitOfMeasure: b.unitOfMeasure, stockQuantity: 0, minimumStockQuantity: 0, missingQuantity: 0 }
+    ])
+  })
+  it('returns an empty list with no low stock products', () => expect(data(reports.lowStock())).toEqual([]))
+})
+
+describe('cash register report', () => {
+  it('separates cash expectations from sales totals and returns null closing values for open registers', () => {
+    sale({ payments: [{ method: 'cash', amountInCents: 2000 }, { method: 'cash', amountInCents: 4000 }, { method: 'pix', amountInCents: 4000 }] })
+    sale({ status: 'open' }); sale({ status: 'cancelled' })
+    expect(data(reports.cashRegisters(period))).toEqual([{
+      id: registerId, openedAt: '2026-09-05 12:00:00', closedAt: null, openingAmountInCents: 1000,
+      totalSoldInCents: 10000, expectedCashInCents: 7000, closingAmountInCents: null, differenceInCents: null
+    }])
+  })
+  it('preserves signed closing differences, includes empty registers and filters by opening date', () => {
+    const db = getDatabase()
+    sale({ total: 500 })
+    db.update(cashRegisters).set({ status: 'closed', closedAt: '2026-10-01T12:00:00Z', closingAmountInCents: 1400, differenceInCents: -100 }).where(eq(cashRegisters.id, registerId)).run()
+    const second = db.insert(cashRegisters).values({ openedAt: '2026-09-06T12:00:00Z', openingAmountInCents: 100 }).returning().get()
+    db.update(cashRegisters).set({ status: 'closed', closedAt: '2026-09-06T15:00:00Z', closingAmountInCents: 150, differenceInCents: 50 }).where(eq(cashRegisters.id, second.id)).run()
+    const third = db.insert(cashRegisters).values({ openedAt: '2026-09-07 12:00:00' }).returning().get()
+    const rows = data(reports.cashRegisters(period))
+    expect(rows.map((row) => row.id)).toEqual([third.id, second.id, registerId])
+    expect(rows[1]).toMatchObject({ totalSoldInCents: 0, expectedCashInCents: 100, closingAmountInCents: 150, differenceInCents: 50 })
+    expect(rows[2]).toMatchObject({ totalSoldInCents: 500, expectedCashInCents: 1500, closingAmountInCents: 1400, differenceInCents: -100 })
+    expect(data(reports.cashRegisters({ startDate: '2026-10-01', endDate: '2026-10-31' }))).toEqual([])
+    expect(reports.cashRegisters({ ...period, startDate: 'invalid' }).success).toBe(false)
+  })
+})

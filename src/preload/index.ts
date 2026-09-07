@@ -1,5 +1,5 @@
 import { REPORTS_IPC_CHANNELS } from '../shared/constants/reports.constants'
-import type { ReportPeriod, TopProductReportRow, ReportResponse, SalesReport, SalesReportFilters } from '../shared/types/reports.types'
+import type { CashRegisterReportRow, LowStockReportRow, ReportPeriod, TopProductReportRow, ReportResponse, SalesReport, SalesReportFilters } from '../shared/types/reports.types'
 import electron from 'electron'
 import { SALES_IPC_CHANNELS } from '../shared/constants/sales.constants'
 import type { Sale, SaleFinalizeInput, SaleServiceResponse } from '../shared/types/sales.types'
@@ -46,6 +46,8 @@ const { contextBridge, ipcRenderer } = electron
 
 const api = {
   reports: {
+    lowStock: (): Promise<ReportResponse<LowStockReportRow[]>> => ipcRenderer.invoke(REPORTS_IPC_CHANNELS.lowStock),
+    cashRegisters: (input: ReportPeriod): Promise<ReportResponse<CashRegisterReportRow[]>> => ipcRenderer.invoke(REPORTS_IPC_CHANNELS.cashRegisters, input),
     topProducts: (input: ReportPeriod): Promise<ReportResponse<TopProductReportRow[]>> => ipcRenderer.invoke(REPORTS_IPC_CHANNELS.topProducts, input),
     sales: (input: SalesReportFilters): Promise<ReportResponse<SalesReport>> => ipcRenderer.invoke(REPORTS_IPC_CHANNELS.sales, input)
   },

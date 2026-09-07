@@ -1,10 +1,11 @@
+import { listLowStock } from './inventory.repository'
 import { allocateSaleDiscount } from '../../shared/utils/reports'
 import { and, desc, eq, sql } from 'drizzle-orm'
 import { PAYMENT_METHODS } from '../../shared/constants/sales.constants'
 import { reportBounds } from '../../shared/schemas/reports.schema'
-import type { ReportPeriod, TopProductReportRow, SalesReport, SalesReportFilters } from '../../shared/types/reports.types'
+import type { CashRegisterReportRow, LowStockReportRow, ReportPeriod, TopProductReportRow, SalesReport, SalesReportFilters } from '../../shared/types/reports.types'
 import { getDatabase } from '../db'
-import { payments, saleItems, sales } from '../db/schema'
+import { cashRegisters, payments, saleItems, sales } from '../db/schema'
 
 const salesConditions = (filters: SalesReportFilters) => {
   const bounds = reportBounds(filters)
@@ -52,4 +53,36 @@ export const topProductsReport = (period: ReportPeriod): TopProductReportRow[] =
     }
   }
   return [...byProduct.values()].sort((a, b) => b.quantitySold - a.quantitySold || b.totalSoldInCents - a.totalSoldInCents || a.productId - b.productId)
+}
+
+export const lowStockReport = (): LowStockReportRow[] => listLowStock().map((product) => ({
+  productId: product.id,
+  productName: product.name,
+  unitOfMeasure: product.unitOfMeasure,
+  stockQuantity: product.stockQuantity,
+  minimumStockQuantity: product.minimumStockQuantity,
+  missingQuantity: product.minimumStockQuantity - product.stockQuantity
+}))
+
+export const cashRegistersReport = (period: ReportPeriod): CashRegisterReportRow[] => {
+  const db = getDatabase()
+  const bounds = reportBounds(period)
+  const sold = db.select({ registerId: sales.cashRegisterId, total: sql<number>`sum(${sales.totalInCents})`.as('sold_total') })
+    .from(sales).where(eq(sales.status, 'paid')).groupBy(sales.cashRegisterId).as('sold')
+  const cash = db.select({ registerId: sales.cashRegisterId, total: sql<number>`sum(${payments.amountInCents})`.as('cash_total') })
+    .from(payments).innerJoin(sales, eq(payments.saleId, sales.id))
+    .where(and(eq(sales.status, 'paid'), eq(payments.method, 'cash'))).groupBy(sales.cashRegisterId).as('cash')
+  return db.select({
+    id: cashRegisters.id,
+    openedAt: cashRegisters.openedAt,
+    closedAt: sql<string | null>`case when ${cashRegisters.status} = 'closed' then ${cashRegisters.closedAt} end`,
+    openingAmountInCents: cashRegisters.openingAmountInCents,
+    totalSoldInCents: sql<number>`coalesce(${sold.total}, 0)`,
+    expectedCashInCents: sql<number>`${cashRegisters.openingAmountInCents} + coalesce(${cash.total}, 0)`,
+    closingAmountInCents: sql<number | null>`case when ${cashRegisters.status} = 'closed' then ${cashRegisters.closingAmountInCents} end`,
+    differenceInCents: sql<number | null>`case when ${cashRegisters.status} = 'closed' then ${cashRegisters.differenceInCents} end`
+  }).from(cashRegisters)
+    .leftJoin(sold, eq(sold.registerId, cashRegisters.id)).leftJoin(cash, eq(cash.registerId, cashRegisters.id))
+    .where(and(sql`julianday(${cashRegisters.openedAt}) >= julianday(${bounds.start})`, sql`julianday(${cashRegisters.openedAt}) < julianday(${bounds.end})`))
+    .orderBy(desc(sql`julianday(${cashRegisters.openedAt})`), desc(cashRegisters.id)).all()
 }
