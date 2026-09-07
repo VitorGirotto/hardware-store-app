@@ -1,3 +1,4 @@
+import { ReportsPage } from './pages/ReportsPage'
 import React from 'react'
 import { STORE_NAME } from '../../shared/constants/store.constants'
 import type { Sale } from '../../shared/types/sales.types'
@@ -125,6 +126,8 @@ const App = (): React.JSX.Element => {
           <SalesPage lastSale={lastSale} onSaleFinalized={setLastSale} draft={salesDraft} setDraft={setSalesDraft} submitting={submittingSale} setSubmitting={setSubmittingSale} onOpenCashRegister={() => setActivePage('Caixa')} />
         ) : activePage === 'Estoque' ? (
           <InventoryPage />
+        ) : activePage === 'Relatórios' ? (
+          <ReportsPage />
         ) : activePage === 'Caixa' ? (
           <CashRegisterPage />
         ) : (

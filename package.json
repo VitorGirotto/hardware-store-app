@@ -28,7 +28,8 @@
     "db:migrate:test": "HARDWARE_STORE_DB_ENV=test HARDWARE_STORE_DB_PATH=database/test/hardware-store.db drizzle-kit migrate",
     "db:migrate:prod": "HARDWARE_STORE_DB_ENV=production HARDWARE_STORE_DB_PATH=database/production/hardware-store.db drizzle-kit migrate",
     "db:studio": "HARDWARE_STORE_DB_ENV=development HARDWARE_STORE_DB_PATH=database/development/hardware-store.db drizzle-kit studio",
-    "postinstall": "electron-builder install-app-deps"
+    "postinstall": "electron-builder install-app-deps",
+    "test:ui:reports": "electron scripts/test-reports-ui.cjs"
   },
   "dependencies": {
     "better-sqlite3": "^13.0.2",
