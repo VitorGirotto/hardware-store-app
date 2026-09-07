@@ -63,3 +63,34 @@ describe('sales reports', () => {
     expect(reports.sales({ startDate: '2024-02-29', endDate: '2024-02-29' }).success).toBe(true)
   })
 })
+
+describe('top product reports', () => {
+  it('allocates cents, groups repeated products, retains the latest sold name and includes inactive products', () => {
+    const a = product('A'), b = product('B')
+    sale({ total: 199, discount: 1, items: [
+      { productId: a.id, productName: 'Antigo', quantity: 0.5, totalInCents: 100 },
+      { productId: b.id, productName: 'B', quantity: 1, totalInCents: 100 }
+    ] })
+    sale({ at: '2026-09-06T12:00:00Z', total: 100, items: [
+      { productId: a.id, productName: 'Nome vendido', quantity: 0.25, totalInCents: 40 },
+      { productId: a.id, productName: 'Nome vendido', quantity: 0.25, totalInCents: 60 }
+    ] })
+    getDatabase().update(products).set({ isActive: false, name: 'Nome posterior' }).where(eq(products.id, a.id)).run()
+    expect(data(reports.topProducts(period))).toEqual([
+      { productId: a.id, productName: 'Nome vendido', quantitySold: 1, totalSoldInCents: 199 },
+      { productId: b.id, productName: 'B', quantitySold: 1, totalSoldInCents: 100 }
+    ])
+    expect(data(reports.topProducts(period)).reduce((sum, row) => sum + row.totalSoldInCents, 0)).toBe(data(reports.sales(period)).totalSoldInCents)
+  })
+  it('handles full discounts and zero subtotals; excludes unpaid and out-of-period sales', () => {
+    const p = product()
+    const item = { productId: p.id, productName: p.name, quantity: 1, totalInCents: 100 }
+    sale({ total: 0, discount: 100, payments: [], items: [item] })
+    sale({ total: 0, payments: [], items: [{ ...item, totalInCents: 0 }] })
+    sale({ status: 'open', items: [item] }); sale({ status: 'cancelled', items: [item] })
+    sale({ at: '2000-01-01 12:00:00', items: [item] })
+    expect(data(reports.topProducts(period))).toEqual([{ productId: p.id, productName: p.name, quantitySold: 2, totalSoldInCents: 0 }])
+    expect(data(reports.topProducts({ startDate: '1990-01-01', endDate: '1990-01-01' }))).toEqual([])
+    expect(reports.topProducts({ ...period, paymentMethod: 'pix' }).success).toBe(false)
+  })
+})

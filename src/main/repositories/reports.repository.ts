@@ -1,9 +1,10 @@
-import { and, eq, sql } from 'drizzle-orm'
+import { allocateSaleDiscount } from '../../shared/utils/reports'
+import { and, desc, eq, sql } from 'drizzle-orm'
 import { PAYMENT_METHODS } from '../../shared/constants/sales.constants'
 import { reportBounds } from '../../shared/schemas/reports.schema'
-import type { SalesReport, SalesReportFilters } from '../../shared/types/reports.types'
+import type { ReportPeriod, TopProductReportRow, SalesReport, SalesReportFilters } from '../../shared/types/reports.types'
 import { getDatabase } from '../db'
-import { payments, sales } from '../db/schema'
+import { payments, saleItems, sales } from '../db/schema'
 
 const salesConditions = (filters: SalesReportFilters) => {
   const bounds = reportBounds(filters)
@@ -28,4 +29,27 @@ export const salesReport = (filters: SalesReportFilters): SalesReport => {
       totalsByPaymentMethod: PAYMENT_METHODS.map((method) => ({ method, totalInCents: byMethod.find((row) => row.method === method)?.totalInCents ?? 0 }))
     }
   })
+}
+
+export const topProductsReport = (period: ReportPeriod): TopProductReportRow[] => {
+  const rows = getDatabase().select({ item: saleItems, discountInCents: sales.discountInCents })
+    .from(saleItems).innerJoin(sales, eq(saleItems.saleId, sales.id)).where(salesConditions(period))
+    .orderBy(desc(sql`julianday(${sales.createdAt})`), desc(sales.id), desc(saleItems.id)).all()
+  const bySale = new Map<number, typeof rows>()
+  for (const row of rows) {
+    const group = bySale.get(row.item.saleId) ?? []
+    group.push(row)
+    bySale.set(row.item.saleId, group)
+  }
+  const byProduct = new Map<number, TopProductReportRow>()
+  for (const group of bySale.values()) {
+    const net = allocateSaleDiscount(group.map((row) => row.item), group[0].discountInCents)
+    for (const { item } of group) {
+      const product = byProduct.get(item.productId) ?? { productId: item.productId, productName: item.productName, quantitySold: 0, totalSoldInCents: 0 }
+      product.quantitySold += item.quantity
+      product.totalSoldInCents += net.get(item.id)!
+      byProduct.set(item.productId, product)
+    }
+  }
+  return [...byProduct.values()].sort((a, b) => b.quantitySold - a.quantitySold || b.totalSoldInCents - a.totalSoldInCents || a.productId - b.productId)
 }

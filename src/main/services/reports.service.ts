@@ -1,6 +1,6 @@
 import type { z } from 'zod'
-import { salesReportSchema } from '../../shared/schemas/reports.schema'
-import type { ReportResponse, SalesReport } from '../../shared/types/reports.types'
+import { reportPeriodSchema, salesReportSchema } from '../../shared/schemas/reports.schema'
+import type { ReportPeriod, TopProductReportRow, ReportResponse, SalesReport } from '../../shared/types/reports.types'
 import * as repository from '../repositories/reports.repository'
 
 const run = <I, O>(schema: z.ZodType<I>, input: unknown, query: (filters: I) => O): ReportResponse<O> => {
@@ -10,3 +10,5 @@ const run = <I, O>(schema: z.ZodType<I>, input: unknown, query: (filters: I) => 
   catch { return { success: false, error: 'Não foi possível gerar o relatório. Tente novamente.' } }
 }
 export const sales = (input: unknown): ReportResponse<SalesReport> => run(salesReportSchema, input, repository.salesReport)
+
+export const topProducts = (input: unknown): ReportResponse<TopProductReportRow[]> => run<ReportPeriod, TopProductReportRow[]>(reportPeriodSchema, input, repository.topProductsReport)

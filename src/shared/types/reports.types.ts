@@ -11,3 +11,9 @@ export type SalesReport = {
   averageTicketInCents: number
   totalsByPaymentMethod: { method: PaymentMethod; totalInCents: number }[]
 }
+export type TopProductReportRow = {
+  productId: number
+  productName: string
+  quantitySold: number
+  totalSoldInCents: number
+}
