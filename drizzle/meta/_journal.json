@@ -43,6 +43,13 @@
       "when": 1788640745279,
       "tag": "0005_flawless_pestilence",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1788906235188,
+      "tag": "0006_pale_satana",
+      "breakpoints": true
     }
   ]
 }

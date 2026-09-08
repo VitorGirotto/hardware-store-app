@@ -1,3 +1,4 @@
+import { BackupsPage } from './pages/BackupsPage'
 import { ReportsPage } from './pages/ReportsPage'
 import React from 'react'
 import { STORE_NAME } from '../../shared/constants/store.constants'
@@ -12,7 +13,7 @@ import { emptySalesDraft } from './features/sales/sales-draft'
 import { ProductsPage } from './pages/ProductsPage'
 import './styles.css'
 
-const pages = ['Dashboard', 'Produtos', 'Clientes', 'Vendas', 'Estoque', 'Caixa', 'Relatórios', 'Configurações'] as const
+const pages = ['Dashboard', 'Produtos', 'Clientes', 'Vendas', 'Estoque', 'Caixa', 'Relatórios', 'Backups', 'Configurações'] as const
 
 type Page = (typeof pages)[number]
 
@@ -117,7 +118,9 @@ const App = (): React.JSX.Element => {
       <div className="flex min-h-screen min-w-0 flex-1 flex-col">
         <Header activePage={activePage} />
         {activePage === 'Dashboard' ? (
-          <DashboardPage />
+          <DashboardPage onOpenBackups={() => setActivePage('Backups')} />
+        ) : activePage === 'Backups' ? (
+          <BackupsPage />
         ) : activePage === 'Produtos' ? (
           <ProductsPage />
         ) : activePage === 'Clientes' ? (

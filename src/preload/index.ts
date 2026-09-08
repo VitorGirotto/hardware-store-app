@@ -1,3 +1,5 @@
+import { BACKUP_IPC_CHANNELS } from '../shared/constants/backup.constants'
+import type { BackupResponse, BackupStatus } from '../shared/types/backup.types'
 import { REPORTS_IPC_CHANNELS } from '../shared/constants/reports.constants'
 import type { CashRegisterReportRow, LowStockReportRow, ReportPeriod, TopProductReportRow, ReportResponse, SalesReport, SalesReportFilters } from '../shared/types/reports.types'
 import electron from 'electron'
@@ -45,6 +47,12 @@ import type {
 const { contextBridge, ipcRenderer } = electron
 
 const api = {
+  backups: {
+    getStatus: (): Promise<BackupResponse<BackupStatus>> => ipcRenderer.invoke(BACKUP_IPC_CHANNELS.getStatus),
+    chooseDirectory: (): Promise<BackupResponse<BackupStatus>> => ipcRenderer.invoke(BACKUP_IPC_CHANNELS.chooseDirectory),
+    updateReminderDays: (days: number): Promise<BackupResponse<BackupStatus>> => ipcRenderer.invoke(BACKUP_IPC_CHANNELS.updateReminderDays, days),
+    create: (): Promise<BackupResponse<BackupStatus>> => ipcRenderer.invoke(BACKUP_IPC_CHANNELS.create)
+  },
   reports: {
     lowStock: (): Promise<ReportResponse<LowStockReportRow[]>> => ipcRenderer.invoke(REPORTS_IPC_CHANNELS.lowStock),
     cashRegisters: (input: ReportPeriod): Promise<ReportResponse<CashRegisterReportRow[]>> => ipcRenderer.invoke(REPORTS_IPC_CHANNELS.cashRegisters, input),

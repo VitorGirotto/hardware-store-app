@@ -1,9 +1,33 @@
+import type { BackupStatus } from '../../../shared/types/backup.types'
+import { backupApi } from '../features/backups/backup.api'
 import React from 'react'
 import type { CashRegisterSummary } from '../../../shared/types/cash-register.types'
 import { cashRegisterApi } from '../features/cash-register/cash-register.api'
 import { formatDateTime, formatMoney } from '../features/cash-register/cash-register.formatters'
 
-export const DashboardPage = (): React.JSX.Element => {
+export const DashboardPage = ({ onOpenBackups }: { onOpenBackups: () => void }): React.JSX.Element => {
+  const [backup, setBackup] = React.useState<BackupStatus | null>(null)
+  const [backupError, setBackupError] = React.useState<string | null>(null)
+  const backupRequest = React.useRef(0)
+  const loadBackup = React.useCallback(async () => {
+    const request = ++backupRequest.current
+    try {
+      const result = await backupApi.getStatus()
+      if (request !== backupRequest.current) return
+      if (!result.success) throw new Error(result.error)
+      setBackup(result.data)
+      setBackupError(null)
+    } catch (error) {
+      if (request === backupRequest.current) setBackupError(error instanceof Error ? error.message : 'Não foi possível consultar o backup.')
+    }
+  }, [])
+  React.useEffect(() => {
+    void loadBackup()
+    const refresh = () => { void loadBackup() }
+    window.addEventListener('focus', refresh)
+    const timer = window.setInterval(refresh, 60_000)
+    return () => { window.removeEventListener('focus', refresh); window.clearInterval(timer); backupRequest.current++ }
+  }, [loadBackup])
   const [summary, setSummary] = React.useState<CashRegisterSummary | null>(null)
   const [isLoading, setIsLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
@@ -61,7 +85,7 @@ export const DashboardPage = (): React.JSX.Element => {
           </div>
           <button
             type="button"
-            onClick={() => void loadSummary()}
+            onClick={() => { void loadSummary(); void loadBackup() }}
             disabled={isLoading}
             className="h-10 border border-slate-600 px-4 text-sm font-semibold text-slate-100 transition hover:border-slate-400 disabled:opacity-60"
           >
@@ -71,6 +95,11 @@ export const DashboardPage = (): React.JSX.Element => {
       </div>
 
       <div className="space-y-5 px-8 py-6">
+        {backupError && <div role="alert" className="border border-red-500/60 bg-red-500/10 px-4 py-3 text-sm text-red-100">{backupError}</div>}
+        {backup?.isOverdue && <div role="alert" className="border border-amber-400/50 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">
+          <p>{backup.lastBackupAt ? `O último backup foi realizado há mais de ${backup.reminderDays} dias. Gere um novo backup.` : 'Nenhum backup realizado. Gere seu primeiro backup.'}</p>
+          <button type="button" onClick={onOpenBackups} className="mt-3 border border-amber-400/60 px-3 py-2 font-semibold hover:bg-amber-400/10">Abrir backups</button>
+        </div>}
         {error ? (
           <div className="border border-red-500/60 bg-red-500/10 px-4 py-3 text-sm text-red-100">
             {error}

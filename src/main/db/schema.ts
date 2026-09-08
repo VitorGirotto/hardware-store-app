@@ -146,3 +146,11 @@ export const stockMovementsRelations = relations(stockMovements, ({ one }) => ({
     references: [products.id]
   })
 }))
+
+export const backupSettings = sqliteTable('backup_settings', {
+  id: integer('id').primaryKey(),
+  destinationDirectory: text('destination_directory'),
+  reminderDays: integer('reminder_days').notNull().default(7),
+  lastBackupAt: text('last_backup_at'),
+  lastBackupPath: text('last_backup_path')
+})

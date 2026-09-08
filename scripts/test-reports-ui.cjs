@@ -26,6 +26,7 @@ const fixtures = {
   'low-stock': [{ productId: 1, productName: 'Cabo flexível', unitOfMeasure: 'm', stockQuantity: 0.25, minimumStockQuantity: 1.5, missingQuantity: 1.25 }],
   'cash-registers': [{ id: 1, openedAt: '2026-09-05 12:00:00', closedAt: '2026-09-05T15:00:00Z', openingAmountInCents: 1000, totalSoldInCents: 10000, expectedCashInCents: 7000, closingAmountInCents: 6900, differenceInCents: -100 }, { id: 2, openedAt: '2026-09-06 12:00:00', closedAt: null, openingAmountInCents: 0, totalSoldInCents: 0, expectedCashInCents: 0, closingAmountInCents: null, differenceInCents: null }]
 }
+ipcMain.handle('backups:get-status', () => ok({ destinationDirectory: null, reminderDays: 7, lastBackupAt: null, lastBackupPath: null, isOverdue: true, isRunning: false }))
 ipcMain.handle('cash-register:get-current-summary', () => ok(null))
 for (const type of Object.keys(fixtures)) ipcMain.handle(`reports:${type}`, async (_event, filters) => {
   calls.push({ type, filters })

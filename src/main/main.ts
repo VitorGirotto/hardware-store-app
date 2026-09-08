@@ -1,3 +1,4 @@
+import { registerBackupIpc } from './ipc/backup.ipc'
 import { registerReportsIpc } from './ipc/reports.ipc'
 import electron from 'electron'
 import type { BrowserWindow as ElectronBrowserWindow } from 'electron'
@@ -49,6 +50,7 @@ app.whenReady().then(() => {
   registerProductIpc()
   registerSalesIpc()
   registerReportsIpc()
+  registerBackupIpc()
 
   createWindow()
 
