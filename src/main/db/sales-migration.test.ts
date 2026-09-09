@@ -52,7 +52,7 @@ describe('sales migration and database protections', () => {
     const sqlite = legacyDatabase()
     migrate(drizzle(sqlite), { migrationsFolder: 'drizzle' })
     expect(sqlite.prepare('SELECT product_name, discount_in_cents, total_in_cents FROM sale_items').get()).toEqual({ product_name: 'Nome atual', discount_in_cents: 0, total_in_cents: 100 })
-    expect(sqlite.prepare('SELECT amount_in_cents FROM payments').get()).toEqual({ amount_in_cents: 100 })
+    expect(sqlite.prepare('SELECT amount_in_cents, received_amount_in_cents FROM payments').get()).toEqual({ amount_in_cents: 100, received_amount_in_cents: null })
     expect(sqlite.prepare('PRAGMA foreign_key_check').all()).toEqual([])
     sqlite.exec("INSERT INTO cash_registers (id) VALUES (2); INSERT INTO sales (id, cash_register_id, subtotal_in_cents, total_in_cents) VALUES (2, 2, 100, 100); INSERT INTO payments (sale_id, method, amount_in_cents) VALUES (2, 'pix', 100); INSERT INTO sale_items (sale_id, product_id, product_name, quantity, unit_price_in_cents, total_in_cents) VALUES (2, 1, 'Nome', 1, 100, 100);")
     // Also enforce immutability while the parent register is still open.

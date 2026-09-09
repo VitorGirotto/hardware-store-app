@@ -98,6 +98,7 @@ export const payments = sqliteTable('payments', {
   saleId: integer('sale_id').notNull().references(() => sales.id),
   method: text('method', { enum: PAYMENT_METHODS }).notNull(),
   amountInCents: integer('amount_in_cents').notNull(),
+  receivedAmountInCents: integer('received_amount_in_cents'),
   paidAt: text('paid_at').notNull().default(sql`CURRENT_TIMESTAMP`)
 })
 

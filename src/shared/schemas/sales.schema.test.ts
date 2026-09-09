@@ -34,6 +34,16 @@ describe('sale validation and totals', () => {
   it.each([0, -1, 139, 141, 0.5])('rejects invalid or mismatched payment %s', (amountInCents) => {
     expect(saleFinalizeSchema.safeParse({ ...input(), payments: [{ method: 'cash', amountInCents }] }).success).toBe(false)
   })
+  it('validates received cash independently of the amount applied to the sale', () => {
+    for (const receivedAmountInCents of [140, 10000]) {
+      expect(saleFinalizeSchema.safeParse({ ...input(), payments: [{ method: 'cash', amountInCents: 140, receivedAmountInCents }] }).success).toBe(true)
+    }
+    for (const receivedAmountInCents of [139, -1, 0.5, NaN, Infinity, Number.MAX_SAFE_INTEGER + 1, null]) {
+      expect(saleFinalizeSchema.safeParse({ ...input(), payments: [{ method: 'cash', amountInCents: 140, receivedAmountInCents }] }).success).toBe(false)
+    }
+    expect(saleFinalizeSchema.safeParse({ ...input(), payments: [{ method: 'pix', amountInCents: 140, receivedAmountInCents: 200 }] }).success).toBe(false)
+    expect(saleFinalizeSchema.safeParse({ ...input(), payments: [{ method: 'cash', amountInCents: 140, receivedAmountInCents: 200, changeInCents: 60 }] }).success).toBe(false)
+  })
   it('accepts mixed methods and rejects unsupported methods', () => {
     expect(saleFinalizeSchema.safeParse({ ...input(), payments: [{ method: 'cash', amountInCents: 40 }, { method: 'credit_card', amountInCents: 100 }] }).success).toBe(true)
     expect(saleFinalizeSchema.safeParse({ ...input(), payments: [{ method: 'other', amountInCents: 140 }] }).success).toBe(false)

@@ -16,7 +16,8 @@ export const saleFinalizeSchema = z.object({
   discountInCents: money.default(0),
   payments: z.array(z.object({
     method: z.enum(PAYMENT_METHODS),
-    amountInCents: money.positive('O pagamento deve ser maior que zero.')
+    amountInCents: money.positive('O pagamento deve ser maior que zero.'),
+    receivedAmountInCents: money.optional()
   }).strict())
 }).strict().superRefine((input, ctx) => {
   try {

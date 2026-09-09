@@ -1,0 +1,1 @@
+ALTER TABLE `payments` ADD `received_amount_in_cents` integer;

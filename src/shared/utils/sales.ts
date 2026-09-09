@@ -31,6 +31,11 @@ export const validateSalePayments = (payments: PaymentInput[], totalInCents: num
   const paid = payments.reduce((sum, payment) => {
     assertMoney(payment.amountInCents)
     if (payment.amountInCents === 0) throw new Error('O pagamento deve ser maior que zero.')
+    if (payment.receivedAmountInCents != null) {
+      if (payment.method !== 'cash') throw new Error('Valor recebido é permitido apenas para dinheiro.')
+      assertMoney(payment.receivedAmountInCents)
+      if (payment.receivedAmountInCents < payment.amountInCents) throw new Error('O valor recebido deve ser igual ou maior que o pagamento em dinheiro.')
+    }
     return assertMoney(sum + payment.amountInCents)
   }, 0)
   if (paid !== totalInCents) throw new Error('A soma dos pagamentos deve ser igual ao total da venda.')

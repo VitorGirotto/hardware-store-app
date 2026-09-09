@@ -6,7 +6,7 @@ export type SaleItemInput = {
   unitPriceInCents: number
   discountInCents: number
 }
-export type PaymentInput = { method: PaymentMethod; amountInCents: number }
+export type PaymentInput = { method: PaymentMethod; amountInCents: number; receivedAmountInCents?: number }
 export type SaleFinalizeInput = {
   cashRegisterId: number
   customerId?: number | null
@@ -20,7 +20,7 @@ export type SaleItem = SaleItemInput & {
   productName: string
   totalInCents: number
 }
-export type Payment = PaymentInput & { id: number; saleId: number; paidAt: string }
+export type Payment = Omit<PaymentInput, 'receivedAmountInCents'> & { receivedAmountInCents?: number | null; id: number; saleId: number; paidAt: string }
 export type Sale = {
   id: number
   customerId: number | null
