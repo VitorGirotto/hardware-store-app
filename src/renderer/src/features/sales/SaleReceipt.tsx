@@ -54,7 +54,13 @@ export const SaleReceipt = ({ sale, onClose }: Props): React.JSX.Element | null 
       <section className="sale-receipt-payments" aria-label="Formas de pagamento">
         <h3>Forma de pagamento</h3>
         {sale.payments.length === 0 ? <p>Sem pagamento (total zero).</p> : <dl>{sale.payments.map((payment) =>
-          <div key={payment.id}><dt>{PAYMENT_METHOD_LABELS[payment.method]}</dt><dd>{formatMoney(payment.amountInCents)}</dd></div>
+          <React.Fragment key={payment.id}>
+            <div><dt>{PAYMENT_METHOD_LABELS[payment.method]}</dt><dd>{formatMoney(payment.amountInCents)}</dd></div>
+            {payment.method === 'cash' && payment.receivedAmountInCents != null ? <>
+              <div><dt>Valor recebido</dt><dd>{formatMoney(payment.receivedAmountInCents)}</dd></div>
+              <div><dt>Troco</dt><dd>{formatMoney(payment.receivedAmountInCents - payment.amountInCents)}</dd></div>
+            </> : null}
+          </React.Fragment>
         )}</dl>}
       </section>
     </dialog>,

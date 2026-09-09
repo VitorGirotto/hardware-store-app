@@ -3,7 +3,7 @@ import type { PaymentMethod } from '../../../../shared/constants/sales.constants
 import type { SaleFinalizeInput } from '../../../../shared/types/sales.types'
 
 export type CartItem = { product: Product; quantity: string; unitPrice: string; discount: string }
-export type DraftPayment = { method: PaymentMethod; amount: string }
+export type DraftPayment = { method: PaymentMethod; amount: string; receivedAmount?: string }
 export type SalesDraft = { items: CartItem[]; customerId: string; discount: string; payments: DraftPayment[] }
 export const emptySalesDraft = (): SalesDraft => ({ items: [], customerId: '', discount: '0,00', payments: [] })
 export const moneyInput = (cents: number): string => (cents / 100).toFixed(2).replace('.', ',')
@@ -39,7 +39,10 @@ export const draftToInput = (draft: SalesDraft, cashRegisterId: number): SaleFin
     productId: item.product.id, quantity: parseQuantity(item.quantity),
     unitPriceInCents: parseMoney(item.unitPrice), discountInCents: parseMoney(item.discount)
   })),
-  payments: draft.payments.map((payment) => ({ method: payment.method, amountInCents: parseMoney(payment.amount) }))
+  payments: draft.payments.map((payment) => ({
+    method: payment.method, amountInCents: parseMoney(payment.amount),
+    ...(payment.receivedAmount !== undefined ? { receivedAmountInCents: parseMoney(payment.receivedAmount) } : {})
+  }))
 })
 export const fieldClass = 'h-10 w-full rounded border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 outline-none focus:border-amber-400 disabled:opacity-50'
 export const buttonClass = 'rounded border border-slate-600 px-3 py-2 text-sm font-medium hover:border-amber-400 disabled:cursor-not-allowed disabled:opacity-50'
