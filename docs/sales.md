@@ -10,15 +10,19 @@ Preços começam com o cadastro e podem ser editados. Valores são inteiros segu
 - Total da linha: bruto menos desconto da linha.
 - Subtotal da venda: soma dos totais das linhas, após seus descontos.
 - Total da venda: subtotal menos desconto adicional.
-- Pagamentos positivos em dinheiro, Pix, débito ou crédito devem somar exatamente o total, sem troco. Total zero exige pagamentos vazios.
+- Pagamentos positivos em dinheiro, Pix, débito ou crédito devem somar exatamente o total. Em dinheiro, o valor do pagamento representa a parcela quitada; o valor recebido pode ser informado separadamente para calcular o troco. Total zero exige pagamentos vazios.
 
 O backend recalcula os valores e captura o nome atual do produto. Verificações de caixa aberto, cliente ativo, produtos ativos e estoque acontecem dentro da mesma transação SQLite `immediate` que salva a venda, itens, pagamentos e movimentos de estoque. Produtos repetidos no payload têm a quantidade acumulada antes da validação do saldo. Pequenos resíduos binários de quantidades fracionárias são tratados proporcionalmente à precisão de ponto flutuante.
 
 A venda é montada como `open` e passa a `paid` somente depois de todas as escritas. Erros lançados durante a operação causam rollback completo. O service converte o erro em resposta após esse rollback. Triggers impedem mudanças em vendas pagas e em seus itens/pagamentos, mesmo com caixa aberto. Não existe API para editar ou estornar vendas finalizadas nesta entrega.
 
-O resumo do caixa continua derivado das vendas pagas e dos pagamentos em dinheiro, sem acumuladores adicionais. Uma falha ao atualizar a tela após a confirmação não é apresentada como falha da venda já salva.
+O botão “Informar troco” aparece em cada pagamento em dinheiro e abre o campo “Valor recebido (R$)”. O troco é calculado automaticamente como recebido menos a parcela em dinheiro, inclusive em pagamentos mistos. Campo ativo vazio, inválido ou inferior à parcela bloqueia a finalização. “Remover troco” volta ao pagamento exato; trocar a forma de pagamento limpa o recebido.
+
+O recebido opcional (`receivedAmountInCents`) é validado no backend e salvo junto ao pagamento; o troco é derivado desses valores. O resumo do caixa continua derivado das vendas pagas e dos pagamentos líquidos em dinheiro, sem acumuladores adicionais. Exemplo: abertura de R$ 300, venda de R$ 32 e recebido de R$ 100 geram R$ 68 de troco e R$ 332 esperados no fechamento (300 + 100 − 68). O troco não é descontado novamente do valor líquido. Uma falha ao atualizar a tela após a confirmação não é apresentada como falha da venda já salva.
 
 ## Banco e validação
+
+A migração 0007 adiciona `received_amount_in_cents` nullable em pagamentos. Registros antigos permanecem com recebido nulo, sem reconstrução de valores históricos. A migração é aplicada pelo inicializador existente.
 
 A migração 0005 é aplicada pelo inicializador existente. Preserva itens e pagamentos, preenche nomes antigos com o nome atual do cadastro e inicializa descontos de itens antigos em zero. Não é possível reconstruir o nome original da venda antiga. Vendas sem vínculo com caixa fazem a migração falhar integralmente, sem atribuição artificial de caixa. Os triggers de caixa são recriados durante a migração.
 
@@ -37,6 +41,6 @@ Os testes de integração do service usam SQLite real em memória, com as migra�
 
 ## Recibo
 
-Após a confirmação da venda, o PDV exibe um recibo com nome da loja, data/hora local, itens e nomes gravados, quantidades, preços unitários, descontos, totais e todas as formas de pagamento com seus valores. O nome acompanha `STORE_NAME`, usado também na navegação do aplicativo.
+Após a confirmação da venda, o PDV exibe um recibo com nome da loja, data/hora local, itens e nomes gravados, quantidades, preços unitários, descontos, totais e todas as formas de pagamento com seus valores. Pagamentos em dinheiro com recebido informado mostram também valor recebido e troco, inclusive na impressão e ao reabrir o último recibo. O nome acompanha `STORE_NAME`, usado também na navegação do aplicativo.
 
 “Imprimir recibo” abre a impressão do sistema e imprime somente o recibo. “Ver último recibo” permite reabrir o recibo da última venda concluída durante a sessão, inclusive após navegar para outras telas. Esta etapa não inclui histórico de recibos nem recuperação após reiniciar o aplicativo.

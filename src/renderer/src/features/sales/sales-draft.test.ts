@@ -9,6 +9,17 @@ describe('PDV draft', () => {
     expect(parseQuantity('0,5')).toBe(0.5)
     for (const text of ['', '1,234', '-1', 'abc', 'Infinity', '1e3', '9007199254740992']) expect(parseMoney(text)).toBeNaN()
   })
+  it('preserves optional received cash and rejects empty or invalid active input', () => {
+    const draft = addProduct(emptySalesDraft(), product)
+    draft.payments = [{ method: 'cash', amount: '12,34', receivedAmount: '100,00' }]
+    expect(draftToInput(draft, 1).payments).toEqual([{ method: 'cash', amountInCents: 1234, receivedAmountInCents: 10000 }])
+    for (const value of ['', 'abc', '1,234']) {
+      draft.payments[0].receivedAmount = value
+      expect(draftToInput(draft, 1).payments[0].receivedAmountInCents).toBeNaN()
+    }
+    delete draft.payments[0].receivedAmount
+    expect(draftToInput(draft, 1).payments[0]).not.toHaveProperty('receivedAmountInCents')
+  })
   it('merges repeated products while preserving edited price and line discount', () => {
     const draft = addProduct(emptySalesDraft(), product)
     draft.items[0].unitPrice = '10,00'

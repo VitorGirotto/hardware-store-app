@@ -47,6 +47,33 @@ describe('atomic sale finalization', () => {
     db.update(products).set({ name: 'Nome posterior' }).where(eq(products.id, input.items[0].productId)).run()
     expect(db.select().from(saleItems).where(eq(saleItems.saleId, result.data.id)).get()?.productName).toBe('Nome no momento da venda')
   })
+  it('persists received cash and closes the example register at 332 reais', () => {
+    const db = getDatabase()
+    db.update(cashRegisters).set({ openingAmountInCents: 30000 }).where(eq(cashRegisters.id, input.cashRegisterId)).run()
+    const result = finalizeSale({ ...input, discountInCents: 0,
+      items: [{ ...input.items[0], quantity: 1, unitPriceInCents: 3200, discountInCents: 0 }],
+      payments: [{ method: 'cash', amountInCents: 3200, receivedAmountInCents: 10000 }] })
+    expect(result).toMatchObject({ success: true, data: { payments: [{ amountInCents: 3200, receivedAmountInCents: 10000 }] } })
+    if (!result.success) throw new Error(result.error)
+    expect(db.select().from(payments).where(eq(payments.saleId, result.data.id)).get()).toMatchObject({ amountInCents: 3200, receivedAmountInCents: 10000 })
+    expect(getCurrentCashRegisterSummary()).toMatchObject({ success: true, data: { expectedCashInCents: 33200, cashPaymentsInCents: 3200 } })
+    expect(closeCashRegister({ cashRegisterId: input.cashRegisterId, closingAmountInCents: 33200 })).toMatchObject({ success: true, data: { expectedCashInCents: 33200, cashRegister: { differenceInCents: 0 } } })
+    input.cashRegisterId = db.insert(cashRegisters).values({ openingAmountInCents: 1000 }).returning().get().id
+  })
+  it('counts only net cash for mixed payments and multiple cash portions', () => {
+    expect(finalizeSale({ ...input, payments: [
+      { method: 'cash', amountInCents: 40, receivedAmountInCents: 100 },
+      { method: 'cash', amountInCents: 30, receivedAmountInCents: 30 },
+      { method: 'pix', amountInCents: 100 }
+    ] }).success).toBe(true)
+    expect(getCurrentCashRegisterSummary()).toMatchObject({ success: true, data: { expectedCashInCents: 1070 } })
+  })
+  it('rejects invalid received amounts without any writes', () => {
+    for (const payment of [
+      { method: 'cash', amountInCents: 170, receivedAmountInCents: 169 },
+      { method: 'pix', amountInCents: 170, receivedAmountInCents: 200 }
+    ]) expectRejectedWithoutWrites({ ...input, payments: [payment] })
+  })
   it('supports free sales and fractional quantities', () => {
     const result = finalizeSale({ ...input, items: [{ ...input.items[0], quantity: 0.5, unitPriceInCents: 0, discountInCents: 0 }], discountInCents: 0, payments: [] })
     expect(result).toMatchObject({ success: true, data: { totalInCents: 0, payments: [] } })
@@ -89,6 +116,7 @@ describe('atomic sale finalization', () => {
   })
   it('rolls back every write if the second stock update fails', () => {
     const db = getDatabase()
+    input.payments[0].receivedAmountInCents = 10000
     const second = db.insert(products).values({ name: 'Segundo', internalCode: 'ROLLBACK', salePriceInCents: 0, stockQuantity: 5 }).returning().get()
     const sqlite = initializeDatabase()
     sqlite.exec(`CREATE TEMP TRIGGER fail_second_stock BEFORE UPDATE OF stock_quantity ON products WHEN NEW.id = ${second.id} BEGIN SELECT RAISE(ABORT, 'TEST_STOCK_FAILURE'); END;`)
