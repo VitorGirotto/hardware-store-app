@@ -34,7 +34,7 @@ export const productCreateSchema = z.object({
   ...productEditableFields,
   stockQuantity: nonNegativeQuantitySchema,
   isActive: productEditableFields.isActive.default(true)
-})
+}).omit({ internalCode: true })
 
 export const productUpdateSchema = z.object(productEditableFields).partial().strict()
 

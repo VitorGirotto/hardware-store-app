@@ -31,7 +31,7 @@ export type ProductMutationInput = {
   isActive?: boolean
 }
 
-export type ProductCreateInput = ProductMutationInput
+export type ProductCreateInput = Omit<ProductMutationInput, 'internalCode'>
 
 export type ProductUpdateInput = Partial<Omit<ProductMutationInput, 'stockQuantity'>>
 

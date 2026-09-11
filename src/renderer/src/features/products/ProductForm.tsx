@@ -79,10 +79,33 @@ export const ProductForm = ({
   const [error, setError] = React.useState<string | null>(null)
   const [isSaving, setIsSaving] = React.useState(false)
 
+  const [codeStatus, setCodeStatus] = React.useState<'loading' | 'ready' | 'error'>(
+    product ? 'ready' : 'loading'
+  )
+  const [codeRetry, setCodeRetry] = React.useState(0)
+
   React.useEffect(() => {
     setForm(createInitialState(product))
     setError(null)
   }, [product])
+
+  React.useEffect(() => {
+    if (product) return
+    let cancelled = false
+    setCodeStatus('loading')
+    setError(null)
+    void productApi.getNextInternalCode().then((result) => {
+      if (cancelled) return
+      if (!result.success) throw new Error(result.error)
+      setForm((current) => ({ ...current, internalCode: result.data }))
+      setCodeStatus('ready')
+    }).catch((error: unknown) => {
+      if (cancelled) return
+      setCodeStatus('error')
+      setError(error instanceof Error ? error.message : 'Nao foi possivel obter o proximo codigo interno.')
+    })
+    return () => { cancelled = true }
+  }, [product, codeRetry])
 
   const updateField = <Field extends keyof ProductFormState>(
     field: Field,
@@ -128,14 +151,16 @@ export const ProductForm = ({
       return editableFields
     }
 
+    const { internalCode: _internalCode, ...createFields } = editableFields
     return {
-      ...editableFields,
+      ...createFields,
       stockQuantity
     } as ProductCreateInput
   }
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault()
+    if (isSaving || (!product && codeStatus !== 'ready')) return
     setError(null)
 
     const payload = buildPayload()
@@ -191,10 +216,19 @@ export const ProductForm = ({
           />
         </label>
 
+        {!product && codeStatus === 'error' ? (
+          <button type="button" onClick={() => setCodeRetry((value) => value + 1)}
+            className="text-sm text-amber-300 underline">
+            Tentar obter codigo novamente
+          </button>
+        ) : null}
+
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <label className="block text-sm font-medium text-slate-200">
             Codigo interno
             <input
+              readOnly={!product}
+              placeholder={!product && codeStatus === 'loading' ? 'Carregando...' : undefined}
               value={form.internalCode}
               onChange={(event) => updateField('internalCode', event.target.value)}
               className="mt-1 h-10 w-full border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 outline-none focus:border-amber-400"
@@ -312,7 +346,7 @@ export const ProductForm = ({
         </button>
         <button
           type="submit"
-          disabled={isSaving}
+          disabled={isSaving || (!product && codeStatus !== 'ready')}
           className="h-10 border border-amber-300 bg-amber-400 px-4 text-sm font-semibold text-slate-950 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isSaving ? 'Salvando...' : 'Salvar'}

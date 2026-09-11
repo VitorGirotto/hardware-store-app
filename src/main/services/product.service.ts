@@ -80,6 +80,14 @@ const ensureUniqueCodes = (
   return success(duplicates)
 }
 
+export const getNextInternalCode = (): ProductServiceResponse<string> => {
+  try {
+    return success(productRepository.getNextInternalCode())
+  } catch (error) {
+    return toBusinessError(error, 'Nao foi possivel obter o proximo codigo interno.')
+  }
+}
+
 export const createProduct = (input: unknown): ProductServiceResponse<Product> => {
   const parsed = productCreateSchema.safeParse(input)
 
@@ -88,7 +96,6 @@ export const createProduct = (input: unknown): ProductServiceResponse<Product> =
   }
 
   const uniqueCodes = ensureUniqueCodes({
-    internalCode: parsed.data.internalCode,
     barcode: parsed.data.barcode
   })
 

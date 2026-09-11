@@ -5,6 +5,7 @@ export type ProductUnit = (typeof PRODUCT_UNITS)[number]
 export const DEFAULT_PRODUCT_UNIT: ProductUnit = 'Un'
 
 export const PRODUCT_IPC_CHANNELS = {
+  getNextInternalCode: 'products:get-next-internal-code',
   create: 'products:create',
   list: 'products:list',
   getById: 'products:get-by-id',

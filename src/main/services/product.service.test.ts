@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { getDatabase } from '../db'
 import { products, saleItems, stockMovements } from '../db/schema'
@@ -11,6 +12,7 @@ import {
 } from './inventory.service'
 import {
   createProduct,
+  getNextInternalCode,
   findProductById,
   findProductsByName,
   inactivateProduct,
@@ -44,7 +46,6 @@ const buildProductInput = (
 
   return {
     name: `Produto ${sequence}`,
-    internalCode: `PROD-${sequence}`,
     barcode: null,
     ncm: '73181500',
     category: 'Ferragens',
@@ -116,14 +117,66 @@ describe('product service', () => {
     expect(unchanged.stockQuantity).toBe(7)
   })
 
-  it('prevents duplicate internal code', () => {
-    expectSuccess(createProduct(buildProductInput({ internalCode: 'DUP-001' })))
+  it('prevents duplicate internal codes when editing', () => {
+    const first = expectSuccess(createProduct(buildProductInput()))
+    const second = expectSuccess(createProduct(buildProductInput()))
+    expect(expectFailure(updateProduct(second.id, { internalCode: first.internalCode })))
+      .toBe('Codigo interno ja cadastrado.')
+  })
 
-    const error = expectFailure(
-      createProduct(buildProductInput({ internalCode: 'DUP-001' }))
-    )
+  it('starts at one and continues through eight without reserving previews', () => {
+    expect(expectSuccess(getNextInternalCode())).toBe('1')
+    expect(expectSuccess(getNextInternalCode())).toBe('1')
+    for (let code = 1; code <= 8; code++) {
+      expect(expectSuccess(createProduct(buildProductInput())).internalCode).toBe(String(code))
+    }
+  })
 
-    expect(error).toBe('Codigo interno ja cadastrado.')
+  it('uses the largest numeric code including inactive and zero-padded legacy codes', () => {
+    const db = getDatabase()
+    for (const internalCode of ['1', '2', '4', 'ABC-999', '12ABC', '9.5', '-20']) {
+      db.insert(products).values({ salePriceInCents: 100, name: 'Legado', internalCode }).run()
+    }
+    expect(expectSuccess(getNextInternalCode())).toBe('5')
+    db.insert(products).values({ salePriceInCents: 100, name: 'Inativo', internalCode: '007', isActive: false }).run()
+    expect(expectSuccess(createProduct(buildProductInput())).internalCode).toBe('8')
+  })
+
+  it('ignores nonnumeric legacy codes and preserves precision for long numeric codes', () => {
+    const db = getDatabase()
+    db.insert(products).values({ salePriceInCents: 100, name: 'Legado', internalCode: 'PROD-99' }).run()
+    expect(expectSuccess(getNextInternalCode())).toBe('1')
+    db.insert(products).values({ salePriceInCents: 100, name: 'Legado numerico', internalCode: '9007199254740993' }).run()
+    expect(expectSuccess(createProduct(buildProductInput())).internalCode).toBe('9007199254740994')
+  })
+
+  it('assigns consecutive codes even with stale or supplied previews', () => {
+    const preview = expectSuccess(getNextInternalCode())
+    const first = expectSuccess(createProduct({ ...buildProductInput(), internalCode: preview }))
+    const second = expectSuccess(createProduct({ ...buildProductInput(), internalCode: preview }))
+    expect([first.internalCode, second.internalCode]).toEqual(['1', '2'])
+  })
+
+  it('does not consume a code when validation or barcode uniqueness fails', () => {
+    expectFailure(createProduct(buildProductInput({ name: '' })))
+    expect(expectSuccess(getNextInternalCode())).toBe('1')
+    expectSuccess(createProduct(buildProductInput({ barcode: 'duplicate' })))
+    expectFailure(createProduct(buildProductInput({ barcode: 'duplicate' })))
+    expect(expectSuccess(createProduct(buildProductInput())).internalCode).toBe('2')
+  })
+
+  it('rolls back the product and code if initial stock insertion fails', () => {
+    const db = getDatabase()
+    db.run(sql`CREATE TEMP TRIGGER fail_initial_stock BEFORE INSERT ON stock_movements
+      BEGIN SELECT RAISE(ABORT, 'Initial stock failed'); END`)
+    try {
+      expectFailure(createProduct(buildProductInput({ stockQuantity: 5 })))
+      expect(db.select().from(products).all()).toHaveLength(0)
+      expect(expectSuccess(getNextInternalCode())).toBe('1')
+    } finally {
+      db.run(sql`DROP TRIGGER fail_initial_stock`)
+    }
+    expect(expectSuccess(createProduct(buildProductInput())).internalCode).toBe('1')
   })
 
   it('prevents duplicate barcode when it is filled', () => {
@@ -148,7 +201,6 @@ describe('product service', () => {
     const created = expectSuccess(
       createProduct(
         buildProductInput({
-          internalCode: 'UPD-001',
           barcode: '7891000000025'
         })
       )
@@ -157,7 +209,7 @@ describe('product service', () => {
     const updated = expectSuccess(
       updateProduct(created.id, {
         name: 'Produto atualizado',
-        internalCode: 'UPD-001',
+        internalCode: created.internalCode,
         barcode: '7891000000025',
         salePriceInCents: 300
       })

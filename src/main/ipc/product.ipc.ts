@@ -5,6 +5,10 @@ import * as productService from '../services/product.service'
 const { ipcMain } = electron
 
 export const registerProductIpc = (): void => {
+  ipcMain.handle(PRODUCT_IPC_CHANNELS.getNextInternalCode, () =>
+    productService.getNextInternalCode()
+  )
+
   ipcMain.handle(PRODUCT_IPC_CHANNELS.create, (_event, input) =>
     productService.createProduct(input)
   )

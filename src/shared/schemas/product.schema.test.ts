@@ -3,7 +3,6 @@ import { productCreateSchema } from './product.schema'
 
 const validProductInput = {
   name: 'Parafuso sextavado',
-  internalCode: 'PAR-001',
   barcode: '7891000000001',
   ncm: '73181500',
   category: 'Fixadores',
@@ -20,6 +19,11 @@ describe('product schema', () => {
     const result = productCreateSchema.safeParse(validProductInput)
 
     expect(result.success).toBe(true)
+  })
+
+  it('discards a supplied internal code on creation', () => {
+    const result = productCreateSchema.parse({ ...validProductInput, internalCode: '999' })
+    expect(result).not.toHaveProperty('internalCode')
   })
 
   it('requires name', () => {

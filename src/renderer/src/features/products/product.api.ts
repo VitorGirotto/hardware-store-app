@@ -17,6 +17,8 @@ const getProductsApi = (): Window['hardwareStore']['products'] => {
 }
 
 export const productApi = {
+  getNextInternalCode: (): Promise<ProductServiceResponse<string>> =>
+    getProductsApi().getNextInternalCode(),
   create: (
     input: ProductCreateInput
   ): Promise<ProductServiceResponse<Product>> =>

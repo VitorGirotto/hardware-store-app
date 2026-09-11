@@ -129,6 +129,8 @@ const api = {
       ipcRenderer.invoke(INVENTORY_IPC_CHANNELS.listLowStock)
   },
   products: {
+    getNextInternalCode: (): Promise<ProductServiceResponse<string>> =>
+      ipcRenderer.invoke(PRODUCT_IPC_CHANNELS.getNextInternalCode),
     create: (
       input: ProductCreateInput
     ): Promise<ProductServiceResponse<Product>> =>

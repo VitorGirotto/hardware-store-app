@@ -50,6 +50,19 @@ const buildListWhere = (filters: ProductListFilters = {}): SQL | undefined => {
   return mergeConditions(conditions)
 }
 
+// Read only the code column, including inactive products. BigInt preserves long legacy codes.
+export const getNextInternalCode = (db: Pick<ReturnType<typeof getDatabase>, 'select'> = getDatabase()): string => {
+  let maximum = 0n
+  for (const { internalCode } of db.select({ internalCode: products.internalCode }).from(products).all()) {
+    const code = internalCode.trim()
+    if (/^[0-9]+$/.test(code)) {
+      const numericCode = BigInt(code)
+      if (numericCode > maximum) maximum = numericCode
+    }
+  }
+  return String(maximum + 1n)
+}
+
 export const createProduct = (input: ProductCreateInput): ProductRecord => {
   const db = getDatabase()
   const { stockQuantity, ...productInput } = input
@@ -59,6 +72,7 @@ export const createProduct = (input: ProductCreateInput): ProductRecord => {
       .insert(products)
       .values({
         ...productInput,
+        internalCode: getNextInternalCode(tx),
         stockQuantity,
         isActive: input.isActive ?? true
       })
@@ -78,7 +92,7 @@ export const createProduct = (input: ProductCreateInput): ProductRecord => {
     }
 
     return product
-  })
+  }, { behavior: 'immediate' })
 }
 
 export const listProducts = (filters: ProductListFilters = {}): ProductRecord[] => {
