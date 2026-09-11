@@ -18,6 +18,7 @@ contextBridge.exposeInMainWorld('hardwareStore', {
       return ok(product)
     },
     update: async (id, input) => {
+      lastInput = input
       const product = products.find((item) => item.id === id)
       Object.assign(product, input)
       return ok(product)
@@ -26,5 +27,6 @@ contextBridge.exposeInMainWorld('hardwareStore', {
 })
 contextBridge.exposeInMainWorld('productsTest', {
   fail: (value) => { fail = value },
-  lastInput: () => lastInput
+  lastInput: () => lastInput,
+  makeLegacy: () => { Object.assign(products[0], { markupPercentage: null, costPriceInCents: 300, salePriceInCents: 400 }) }
 })

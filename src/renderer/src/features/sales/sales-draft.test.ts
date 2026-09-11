@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { addProduct, draftToInput, emptySalesDraft, parseMoney, parseQuantity } from './sales-draft'
 import type { Product } from '../../../../shared/types/product.types'
-const product: Product = { id: 1, name: 'Martelo', internalCode: 'A', barcode: null, category: null, ncm: null, unitOfMeasure: 'Un', costPriceInCents: 0, salePriceInCents: 1234, stockQuantity: 10, minimumStockQuantity: 0, isActive: true, createdAt: '', updatedAt: '' }
+const product: Product = { markupPercentage: null, id: 1, name: 'Martelo', internalCode: 'A', barcode: null, category: null, ncm: null, unitOfMeasure: 'Un', costPriceInCents: 0, salePriceInCents: 1234, stockQuantity: 10, minimumStockQuantity: 0, isActive: true, createdAt: '', updatedAt: '' }
 describe('PDV draft', () => {
   it('converts decimal input without silently rounding invalid precision', () => {
     expect(parseMoney('12,34')).toBe(1234)

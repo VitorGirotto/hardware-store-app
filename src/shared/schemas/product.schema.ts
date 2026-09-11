@@ -26,6 +26,7 @@ const productEditableFields = {
   unitOfMeasure: z.enum(PRODUCT_UNITS),
   costPriceInCents: nonNegativeMoneyInCentsSchema,
   salePriceInCents: nonNegativeMoneyInCentsSchema,
+  markupPercentage: z.number().finite().min(-100, 'A margem nao pode ser menor que -100%.').nullable().optional(),
   minimumStockQuantity: nonNegativeQuantitySchema,
   isActive: z.boolean()
 }

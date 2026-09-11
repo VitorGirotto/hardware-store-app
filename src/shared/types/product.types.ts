@@ -8,6 +8,7 @@ export type Product = {
   ncm: string | null
   category: string | null
   unitOfMeasure: ProductUnit
+  markupPercentage: number | null
   costPriceInCents: number
   salePriceInCents: number
   stockQuantity: number
@@ -18,6 +19,7 @@ export type Product = {
 }
 
 export type ProductMutationInput = {
+  markupPercentage?: number | null
   name: string
   internalCode: string
   barcode?: string | null

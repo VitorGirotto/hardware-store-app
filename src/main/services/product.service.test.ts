@@ -87,6 +87,27 @@ describe('product service', () => {
     db.delete(products).run()
   })
 
+  it('persists the exact markup without recalculating rounded prices', () => {
+    const created = expectSuccess(createProduct(buildProductInput({
+      costPriceInCents: 1, salePriceInCents: 2, markupPercentage: 80
+    })))
+    expect(expectSuccess(findProductById(created.id)).markupPercentage).toBe(80)
+    const updated = expectSuccess(updateProduct(created.id, { name: 'Novo nome' }))
+    expect(updated).toMatchObject({ markupPercentage: 80, costPriceInCents: 1, salePriceInCents: 2 })
+    expect(expectSuccess(updateProduct(created.id, { markupPercentage: null })).markupPercentage).toBeNull()
+  })
+
+  it('allows legacy products without markup and rejects invalid percentages', () => {
+    const created = expectSuccess(createProduct(buildProductInput()))
+    expect(created.markupPercentage).toBeNull()
+    for (const markupPercentage of [-101, Infinity, NaN]) {
+      expectFailure(createProduct(buildProductInput({ markupPercentage })))
+      expectFailure(updateProduct(created.id, { markupPercentage }))
+    }
+    expect(expectSuccess(updateProduct(created.id, { markupPercentage: -100 })).markupPercentage).toBe(-100)
+    expect(expectSuccess(updateProduct(created.id, { markupPercentage: 150.25 })).markupPercentage).toBe(150.25)
+  })
+
   it('creates and lists a product through the repository', () => {
     const created = expectSuccess(createProduct(buildProductInput()))
     const listed = expectSuccess(findProductById(created.id))

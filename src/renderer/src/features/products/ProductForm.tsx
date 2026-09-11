@@ -6,6 +6,7 @@ import type {
   ProductUpdateInput
 } from '../../../../shared/types/product.types'
 import { productApi } from './product.api'
+import { calculateMarkup, calculateSalePrice, parsePriceInCents, parsePricingDecimal, updateProductPricing } from './product-pricing'
 
 type ProductFormProps = {
   product: Product | null
@@ -21,6 +22,7 @@ type ProductFormState = {
   ncm: string
   category: string
   unitOfMeasure: ProductUnit
+  markupPercentage: string
   costPrice: string
   salePrice: string
   stockQuantity: string
@@ -48,9 +50,10 @@ const parseDecimalInput = (value: string): number | null => {
   return Number.isFinite(parsed) ? parsed : null
 }
 
-const parseMoneyInput = (value: string): number | null => {
-  const parsed = parseDecimalInput(value)
-  return parsed === null ? null : Math.round(parsed * 100)
+const initialMarkup = (product: Product | null): string => {
+  if (!product) return ''
+  const markup = product.markupPercentage ?? calculateMarkup(product.costPriceInCents, product.salePriceInCents)
+  return markup === null ? '' : String(markup)
 }
 
 const createInitialState = (product: Product | null): ProductFormState => ({
@@ -60,6 +63,7 @@ const createInitialState = (product: Product | null): ProductFormState => ({
   ncm: product?.ncm ?? '',
   category: product?.category ?? '',
   unitOfMeasure: product?.unitOfMeasure ?? 'Un',
+  markupPercentage: initialMarkup(product),
   costPrice: product ? centsToInput(product.costPriceInCents) : '0.00',
   salePrice: product ? centsToInput(product.salePriceInCents) : '0.00',
   stockQuantity: product ? numberToInput(product.stockQuantity) : '0',
@@ -111,15 +115,17 @@ export const ProductForm = ({
     field: Field,
     value: ProductFormState[Field]
   ): void => {
-    setForm((current) => ({
-      ...current,
-      [field]: value
-    }))
+    setForm((current) => {
+      if (field === 'costPrice' || field === 'salePrice' || field === 'markupPercentage') {
+        return { ...current, ...updateProductPricing(current, field, value as string) }
+      }
+      return { ...current, [field]: value }
+    })
   }
 
   const buildPayload = (): ProductCreateInput | ProductUpdateInput | null => {
-    const costPriceInCents = parseMoneyInput(form.costPrice)
-    const salePriceInCents = parseMoneyInput(form.salePrice)
+    const costPriceInCents = parsePriceInCents(form.costPrice)
+    const salePriceInCents = parsePriceInCents(form.salePrice)
     const stockQuantity = parseDecimalInput(form.stockQuantity)
     const minimumStockQuantity = parseDecimalInput(form.minimumStockQuantity)
 
@@ -134,7 +140,20 @@ export const ProductForm = ({
       return null
     }
 
+    const markupPercentage = form.markupPercentage.trim()
+      ? parsePricingDecimal(form.markupPercentage)
+      : null
+    if (form.markupPercentage.trim() && (
+      markupPercentage === null || markupPercentage < -100 ||
+      calculateSalePrice(costPriceInCents, markupPercentage) === null
+    )) {
+      setError('Informe uma margem valida, maior ou igual a -100%.')
+      onError(product ? 'Erro ao atualizar' : 'Erro ao cadastrar')
+      return null
+    }
+
     const editableFields: ProductUpdateInput = {
+      markupPercentage,
       name: form.name,
       internalCode: form.internalCode,
       barcode: textOrNull(form.barcode),
@@ -284,6 +303,7 @@ export const ProductForm = ({
           <label className="block text-sm font-medium text-slate-200">
             Preco de custo
             <input
+              aria-label="Preco de custo"
               value={form.costPrice}
               onChange={(event) => updateField('costPrice', event.target.value)}
               inputMode="decimal"
@@ -292,8 +312,20 @@ export const ProductForm = ({
           </label>
 
           <label className="block text-sm font-medium text-slate-200">
+            Margem sobre o custo (%)
+            <input
+              aria-label="Margem sobre o custo (%)"
+              value={form.markupPercentage}
+              onChange={(event) => updateField('markupPercentage', event.target.value)}
+              inputMode="decimal"
+              className="mt-1 h-10 w-full border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 outline-none focus:border-amber-400"
+            />
+          </label>
+
+          <label className="block text-sm font-medium text-slate-200">
             Preco de venda
             <input
+              aria-label="Preco de venda"
               value={form.salePrice}
               onChange={(event) => updateField('salePrice', event.target.value)}
               inputMode="decimal"

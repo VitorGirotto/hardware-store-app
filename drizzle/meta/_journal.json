@@ -57,6 +57,13 @@
       "when": 1788984015427,
       "tag": "0007_bent_wolfpack",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1789130824220,
+      "tag": "0008_giant_revanche",
+      "breakpoints": true
     }
   ]
 }

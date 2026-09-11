@@ -15,6 +15,7 @@ export const products = sqliteTable('products', {
   unitOfMeasure: text('unit_of_measure', { enum: PRODUCT_UNITS }).notNull().default(DEFAULT_PRODUCT_UNIT),
   costPriceInCents: integer('cost_price_in_cents').notNull().default(0),
   salePriceInCents: integer('sale_price_in_cents').notNull(),
+  markupPercentage: real('markup_percentage'),
   stockQuantity: real('stock_quantity').notNull().default(0),
   minimumStockQuantity: real('minimum_stock_quantity').notNull().default(0),
   isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),

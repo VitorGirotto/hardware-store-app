@@ -1,0 +1,1 @@
+ALTER TABLE `products` ADD `markup_percentage` real;
